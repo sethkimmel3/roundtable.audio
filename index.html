@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+    <title>Discourse.FM</title>
+  <style>
+    
+  </style>
+      <script src="node_modules/socket.io-client/dist/socket.io.js"></script>
+        <script>
+           var socket = io("http://127.0.0.1:3000");
+
+            // Add a connect listener
+            socket.on('connect',function() {
+               console.log('Client has connected to the server!');
+            });
+            
+            
+        </script>
+      <script>
+        $( document ).ready(function() {
+            
+            // handle text changer
+            $.fn.randomInt = function(max){
+                return Math.floor(Math.random() * Math.floor(max));
+            }
+            
+            $.fn.rotateTextChanger = function(words, iIndex){
+               $('#textchanger').html(words[iIndex]).fadeIn(1500, function(){
+                    var newIndex = $.fn.randomInt(words.length);
+                    while(newIndex == iIndex){
+                        newIndex = $.fn.randomInt(words.length);
+                    }
+                    iIndex = newIndex;
+                    $('#textchanger').fadeOut(1500, function(){
+                        $.fn.rotateTextChanger(words, iIndex);
+                    })
+                }) 
+            }
+            
+            var words = ['share your ideas.', 
+                         'learn something new.', 
+                         'debate a topic.',
+                         'host an interview.',
+                         'catch up with friends.',
+                         'meet new people.',
+                         'start a podcast.',
+                         'find inspiration.',
+                         'bridge the divide.',
+                         'promote your brand.',
+                         'reconnect with the world.',
+                         'drive the conversation forward.'];
+            //$.fn.rotateTextChanger(words, 0);
+            
+            // handle adding existing discourses 
+            $.fn.addDiscourseCard = function(title, tag_list, description, n_participants, n_listeners, listen_link, join_link){
+                tags = ''
+                $.each(tag_list, function(index, value){
+                   tag = '<span class="badge badge-secondary mr-1">#' + value + '</span>';
+                   tags += tag;
+                });
+                var discourseCard = '<div class="column mr-3"><div class="card" style="width: 18rem;"><div class="card-body"><h5 class="card-title">' + title + '</h5><h6 class="card-subtitle mb-2 text-muted">' + tags + '</h6><p class="card-text">' + description + '</p><p>' + n_participants  + ' Participants | ' + n_listeners + ' Listeners</p><button type="button" class="btn btn-warning mr-3" href="' + join_link + '" class="card-link">Join</button><button type="button" class="btn btn-primary" href="' + listen_link + '" class="card-link">Listen</button></div></div></div>';
+                $('#discourseCards').append(discourseCard);
+            }
+            
+            for(i = 0; i < 10; i++){
+                $.fn.addDiscourseCard('Example Title', ['something', 'another', 'one'], "This is an example description. I'm not sure if the quote will mess it up.", 10, 153, '#', '#');
+            }
+            
+            // handle discourse creation
+            var join_id;
+            var listen_id;
+            var join_link;
+            var listen_link;
+            
+            // create unique identifier 
+            function uuidv4() {
+                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                  var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                  return v.toString(16);
+                });
+              }
+            
+            $('#new_discourse').click(function(){
+                join_id = uuidv4();
+                listen_id = uuidv4();
+                join_link = 'https://www.discourse.fm/jid=' + join_id;
+                listen_link = 'https://www.discourse.fm/lid=' + listen_id;
+                $('#join-link-label').html(join_link);
+                $('#listen-link-label').html(listen_link);
+            });
+            
+            $.fn.copy_to_clipboard = function(text){
+                var el = document.createElement('textarea');
+                el.textContent = text;
+                document.body.appendChild(el);
+                
+                var selection = document.getSelection();
+                var range = document.createRange();
+                
+                range.selectNode(el);
+                selection.removeAllRanges();
+                selection.addRange(range);
+                
+                console.log('copy success', document.execCommand('copy'));
+                selection.removeAllRanges();
+                
+                document.body.removeChild(el);
+            }
+            
+            $.fn.copy_join_link = function(){
+                $.fn.copy_to_clipboard(join_link);
+                $('#copy-join-link-button').tooltip({title: 'Copied!'});
+                $('#copy-join-link-button').tooltip('show');
+                setTimeout(function(){
+                    $('#copy-join-link-button').tooltip('dispose');
+                }, 1000);
+            }
+            
+            $.fn.copy_listen_link = function(){
+                $.fn.copy_to_clipboard(listen_link);
+                $('#copy-listen-link-button').tooltip({title: 'Copied!'});
+                $('#copy-listen-link-button').tooltip('show');
+                setTimeout(function(){
+                    $('#copy-listen-link-button').tooltip('dispose');
+                }, 1000);
+            }
+            
+            $('#private-join').click(function(){
+               $('#private-join').addClass('btn-primary');
+               $('#private-join').removeClass('btn-outline-primary');
+               $('#public-join').removeClass('btn-primary');
+               $('#public-join').addClass('btn-outline-primary');
+               $('#join-link').show();
+            });
+            
+            $('#public-join').click(function(){
+               $('#public-join').addClass('btn-primary');
+               $('#public-join').removeClass('btn-outline-primary');
+               $('#private-join').removeClass('btn-primary');
+               $('#private-join').addClass('btn-outline-primary');
+               $('#join-link').hide();
+                
+               if($('#private-listen').hasClass('btn-primary')){
+                   $('#public-listen').click();
+                   $('#public-join').tooltip({title: 'Discourse cannot be private to listen to and public to join.'});
+                    $('#public-join').tooltip('show');
+                    setTimeout(function(){
+                        $('#public-join').tooltip('dispose');
+                    }, 3000);
+               }
+            });
+            
+            $('#private-listen').click(function(){
+               $('#private-listen').addClass('btn-primary');
+               $('#private-listen').removeClass('btn-outline-primary');
+               $('#public-listen').removeClass('btn-primary');
+               $('#public-listen').addClass('btn-outline-primary');
+               $('#listen-link').show();
+                
+               if($('#public-join').hasClass('btn-primary')){
+                   $('#private-join').click();
+                   $('#private-listen').tooltip({title: 'Discourse cannot be private to listen to and public to join.'});
+                    $('#discourse-name').tooltip('show');
+                    setTimeout(function(){
+                        $('#private-listen').tooltip('dispose');
+                    }, 3000);
+               }
+            });
+            
+            $('#public-listen').click(function(){
+               $('#public-listen').addClass('btn-primary');
+               $('#public-listen').removeClass('btn-outline-primary');
+               $('#private-listen').removeClass('btn-primary');
+               $('#private-listen').addClass('btn-outline-primary');
+               $('#listen-link').hide();
+            });
+            
+            $('#discourse-name').keyup(function(){
+                var chars = $(this).val().length;
+                if(chars > 0){
+                    $('#discourse-name').removeClass('is-invalid');
+                    $('#discourse-name').addClass('is-valid');
+                }else{
+                    $('#discourse-name').removeClass('is-valid');
+                    $('#discourse-name').addClass('is-invalid');
+                }
+            })
+            
+            $('#discourse-description').keyup(function(){
+               var chars = $(this).val().length;
+               $('#discourse-description-character-count').html(180 - chars);
+               if(parseInt(chars) <= 180){
+                    $('#discourse-description').removeClass('is-invalid');
+                    $('#discourse-description').addClass('is-valid');
+               }else{
+                    $('#discourse-description-character-count').html(0);
+                    $('#discourse-description').removeClass('is-valid');
+                    $('#discourse-description').addClass('is-invalid');
+               }
+            });
+            
+            var tags = [];
+            var tag_map = new Map();
+            $.fn.removeTag = function(tag_id){
+                var tag_input = tag_map[tag_id];
+                var index = tags.indexOf(tag_input);
+                tags.splice(index, 1);
+                $('#tag-' + tag_id).remove();
+                if(tags.length == 0){
+                    $('#discourse-tags').removeClass('is-valid');
+                    $('#discourse-tags').addClass('is-invalid');
+                }
+            }
+            
+            $('#discourse-tags').keyup(function(e){
+                 var input = $(this).val().trim();
+                 var tag_uuid = uuidv4();
+                 tag_uuid_with_quotes = "'" + tag_uuid + "'";
+                 JSON.stringify(tag_uuid_with_quotes);
+                 tag_map[tag_uuid] = input;
+                 if(((e.keyCode == 32) || (e.keyCode == 13)) && (input!= null) && (input != '')){
+                    var tag = '<span id="tag-' + tag_uuid + '" class="badge badge-secondary mr-1">#' + input + ' <img src="icons/x-circle-white.svg" alt="" title="Bootstrap" style="cursor:pointer;" onclick="$.fn.removeTag(' + tag_uuid_with_quotes + ')"></span>';
+                    $('#tag-field').append(tag);
+                    $('#discourse-tags').val('');
+                    tags.push(input);
+                    $('#discourse-tags').removeClass('is-invalid');
+                    $('#discourse-tags').addClass('is-valid');
+                 }
+            });
+            
+            var discourse_creation_in_progress = false;
+            
+            $('#create-discourse').click(function(){
+                //verify form
+                var errors = 0;
+                
+                var discourse_name = $('#discourse-name').val();
+                if(discourse_name.trim() == '' || discourse_name == null){
+                    errors += 1;
+                    $('#discourse-name').addClass('is-invalid');
+                    $('#discourse-name').tooltip({title: 'Discourse name cannot be empty!'});
+                    $('#discourse-name').tooltip('show');
+                    setTimeout(function(){
+                        $('#discourse-name').tooltip('dispose');
+                    }, 3000);
+                }else if(discourse_name.trim().length > 100){
+                    $('#discourse-name').addClass('is-invalid');
+                    $('#discourse-name').tooltip({title: 'Discourse name cannot exceed 100 characters.'});
+                    $('#discourse-name').tooltip('show');
+                    setTimeout(function(){
+                        $('#discourse-name').tooltip('dispose');
+                    }, 3000);
+                }
+                
+                var discourse_description = $('#discourse-description').val();
+                if(discourse_description.length > 180){
+                    errors += 1;
+                    $('#discourse-description').addClass('is-invalid');
+                    $('#discourse-description').tooltip({title: 'Discourse description cannot exceed 180 characters.'});
+                    $('#discourse-description').tooltip('show');
+                    setTimeout(function(){
+                        $('#discourse-description').tooltip('dispose');
+                    }, 3000);;
+                }
+                
+                if(tags.length == 0){
+                    errors += 1;
+                    $('#discourse-tags').addClass('is-invalid');
+                    $('#discourse-tags').tooltip({title: 'You must provide at least one tag.'});
+                    $('#discourse-tags').tooltip('show');
+                    setTimeout(function(){
+                        $('#discourse-tags').tooltip('dispose');
+                    }, 3000);;
+                }
+                
+                var server_JID = null;
+                var server_LID = null;
+                if(errors == 0){
+                    //create the discourse
+                    if($('#public-join').hasClass('btn-primary')){
+                        var join_visibility = 'public';
+                    }else{
+                        var join_visibility = 'private';
+                        server_JID = join_id;
+                    }
+                    
+                    if($('#public-listen').hasClass('btn-primary')){
+                        var listen_visibility = 'public';
+                    }else{
+                        var listen_visibility = 'private';
+                        server_LID = listen_id;
+                    }
+                    
+                    var discourse_info_array = {
+                                           "discourse-name": discourse_name,
+                                           "discourse-description": discourse_description, 
+                                           "discourse-tags": tags,
+                                           "join-visibility": join_visibility,
+                                           "listen-visibility": listen_visibility,
+                                           "discourse_JID": server_JID,
+                                           "discourse_LID": server_LID
+                                          }
+                    
+                    $('#create-discourse').html('Creating Discourse...');
+                    
+                    if(discourse_creation_in_progress == false){
+                        discourse_creation_in_progress = true;
+                        socket.emit('create_discourse', discourse_info_array, function(err,data){
+                            if(err != 'error'){
+                                window.alert(data);
+                                var data_to_store = {
+                                    "JID": server_JID,
+                                    "LID": server_LID,
+                                    "JID_secret": data['JID_secret'],
+                                    "LID_secret": data['LID_secret']
+                                }
+                                localStorage.setItem(data['UDI'],  data_to_store);
+                                window.location.href = window.location.href + 'live/' + data['UDI'];
+                            }
+                        })
+                    }
+                }
+            });
+            
+        });
+            
+      </script>
+  </head>
+  <body>
+    
+    <div class="container min-vh-100">
+      <div class="row min-vh-100 justify-content-center align-items-center">
+        <div class="column col-md-12"> <!-- class="text-center" -->
+            <h1 class="display-3">Discourse.FM</h1> 
+            <h3>Live, broadcasted audio chat rooms to <span id="textchanger">learn something new.</span></h3>
+            <h5>Listen to a public discourse below, or <span id="new_discourse" style="color:#28a745;cursor: pointer;" data-toggle="modal" data-target="#newDiscourseModal"> start a new discourse</span>.</h5>
+            <br>
+            <div class="container h-75" style="background-color: white; overflow-x: auto;">
+                <div class="row flex-row flex-nowrap" id="discourseCards">
+                    
+                </div>
+            </div>
+        </div>
+      </div>
+    
+<!--
+      <div class="row justify-content-center align-items-center">
+        <h3>Share your ideas with the world in live, broadcasted audio chat rooms.</h3>
+        <h5>Listen to a public discourse below, or start a new one.</h5>
+      </div>
+-->
+    </div>
+      
+    <div class="modal fade" id="newDiscourseModal" tabindex="-1" aria-labelledby="newDiscourseModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="newDiscourseModalLabel">Start a New Discourse</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="form-group">
+                <label for="discourse-name" class="col-form-label">Discourse Name: </label>
+                <input type="text" class="form-control" id="discourse-name" required>
+              </div>
+              <div class="form-group">
+                <label for="discourse-description" class="col-form-label">Description (<span id="discourse-description-character-count">180</span> characters remaining): </label>
+                <textarea class="form-control" id="discourse-description"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="discourse-tags" class="col-form-label">Tags (add at least one): </label>
+                <input type="text" class="form-control" id="discourse-tags" required>
+                <h4 id="tag-field" class="mt-3"></h4>
+              </div>
+              <div class="btn-group" data-toggle="buttons">
+                <label id="public-join" class="btn btn-primary">
+                 <input type="radio" name="options" id="public-join" style="display:none;"> Public to Join as a Participant 
+                </label>
+                <label id="private-join" class="btn btn-outline-primary" >
+                 <input type="radio" name="options" id="private-join" style="display:none;"> Private to Join as a Participant 
+                </label>
+              </div>
+              <label id="join-link" style="display: none;">Private Joining Link (save this!): <br><div class="container" style="background-color:rgba(0,0,0,0.025);"><span class="private-links mr-3" id="join-link-label" style="font-size:10.5px;"></span><button type="button" id="copy-join-link-button" class="btn btn-sm" onclick="$.fn.copy_join_link()"><img src="icons/clipboard-plus.svg" alt="" width="15" height="15" title="Bootstrap"></button></div></label>
+                <div class="btn-group" data-toggle="buttons">
+                <label id="public-listen" class="btn btn-primary">
+                 <input type="radio" name="options" id="public-listen" style="display:none;"> Public to Join as a Listener
+                </label>
+                <label id="private-listen" class="btn btn-outline-primary">
+                 <input type="radio" name="options" id="private-listen" style="display:none;"> Private to Join as a Listener 
+                </label>
+              </div>
+              <label id="listen-link" style="display: none;">Private Listening Link (save this!): <br><div class="container" style="background-color:rgba(0,0,0,0.025);"><span class="private-links mr-3" id="listen-link-label" style="font-size:10.5px;"></span><button type="button" id="copy-listen-link-button" class="btn btn-sm" onclick="$.fn.copy_listen_link()"><img src="icons/clipboard-plus.svg" alt="" width="15" height="15" title="Bootstrap"></button></div></label>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" id="create-discourse">Create Discourse</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
