@@ -16,46 +16,248 @@
   <style>
     
   </style>
-      <script src="node_modules/socket.io-client/dist/socket.io.js"></script>
-        <script>
-           var socket = io("http://127.0.0.1:3000");
-
+      <script src="../node_modules/socket.io-client/dist/socket.io.js"></script>
+      <script src="../Base64.js"></script>
+      <script src="../krakenapi.js"></script>
+      <script>
+        $( document ).ready(function() {
+            var socket = io("http://127.0.0.1:3000");
             // Add a connect listener
             socket.on('connect',function() {
                console.log('Client has connected to the server!');
             });
             
+            function uuidv4() {
+               return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+               });
+            }
             
-        </script>
-      <script>
-        $( document ).ready(function() {
+            //get user id, or set if doesn't exist
+            var user_id = localStorage.getItem('user_id');
+            if (!user_id || user_id == "null" || user_id == null) { 
+               user_id = uuidv4();
+               localStorage.setItem('user_id', user_id);
+            }
             
-            var dname = location.pathname.split('/')[1];
-            window.alert()
+            var pathSplit = location.pathname.split('/')
+            var UDI = pathSplit[pathSplit.length - 1];
+            
+            var nickname = localStorage.getItem(UDI+':'+user_id);
+            if(nickname != null){
+                var uname = user_id + ':' + Base64.encode(nickname);
+                var unameRPC = encodeURIComponent(uname);
+            }
+            
+            $.fn.setNickName = function(){
+                    nickname = $('#nickname-input').val(); 
+                    if (!nickname || nickname.trim() === '') {
+                        $('#nickname-input').addClass('is-invalid');
+                        $('#nickname-input').tooltip({title: 'Nickname cannot be empty.'});
+                        $('#nickname-input').tooltip('show');
+                        setTimeout(function(){
+                            $('#nickname-input').tooltip('dispose');
+                        }, 3000);
+                    } else if (nickname.length > 32) {
+                        $('#nickname-input').addClass('is-invalid');
+                        $('#nickname-input').tooltip({title: 'Nickname cannot be more than 32 characters.'});
+                        $('#nickname-input').tooltip('show');
+                        setTimeout(function(){
+                            $('#nickname-input').tooltip('dispose');
+                        }, 3000);
+                    } else {
+                        $('#nickname-input').addClass('is-valid');
+                        localStorage.setItem(UDI+':'+user_id, nickname);
+                        uname = user_id + ':' + Base64.encode(nickname);
+                        unameRPC = encodeURIComponent(uname);
+                        $('#nickNameModal').modal('hide');
+                    }
+            }
+            
+            var JID = null;
+            var LID = null;
+            var JID_secret = null;
+            var LID_secret = null;
+            
+            // get data 
+            var local_discourse_data = localStorage.getItem(UDI);
+            local_discourse_data = JSON.parse(local_discourse_data);
+            
+            if(local_discourse_data != null){
+                JID = local_discourse_data['JID'];
+                JID_secret = local_discourse_data['JID_secret'];
+                LID = local_discourse_data['LID'];
+                LID_secret = local_discourse_data['LID_secret'];
+            }
+            
+            var auth_into_discourse_array = {
+                "UDI": UDI,
+                "JID": JID,
+                "LID": LID
+            }
+                
+            socket.emit('auth_into_discourse', auth_into_discourse_array, function(err,data){
+                if(err != 'error'){
+                    if(data != null){
+                        if(data['end_datetime'] != null){
+                            //add proper handler if discourse has ended 
+                            $.fn.populateDiscourseContent(data, 'ended');
+                        }else{
+                            if(data['join_auth'] == false && data['listen_auth'] == false){
+                                //tell user to revisit the join/listen links and then redirect them to the home page (probably a hacker, but let's not accuse them) 
+                                window.alert('You are not authorized to join or listen to this discourse. Make sure local storage is not disabled and revisit the join or listen link for this discourse to try again.');
+                                window.location.href = window.location.href.split("/live")[0];
+                            }else if(data['join_auth'] == false && data['listen_auth'] == true){
+                                // send request to begin listening via LID secret (server will allow regardless if LID secret is not necessary)
+                                $.fn.populateDiscourseContent(data, 'listen');
+                            }else if(data['join_auth'] == true && data['listen_auth'] == false){
+                                // this case should not really appear, but if so
+                                //tell user to revisit the join/listen links and then redirect them to the home page (probably a hacker, but let's not accuse them)
+                                window.alert('You are not authorized to listen to this discourse. Make sure local storage is not disabled and revisit the join or listen link for this discourse to try again.');
+                                window.location.href = window.location.href.split("/live")[0];
+                            }else if(data['join_auth'] == true && data['listen_auth'] == true){
+                                // send request to begin listening via LID secret (server will allow regardless if LID secret is not necessary)
+                                // send request to join discourse via JID secret (server will allow regardless if LID secret is not necessary)
+                                $.fn.populateDiscourseContent(data, 'join');
+                            }
+                        }
+                    }else{
+                        // add proper handler for non-available discourse or UDI collision
+                        $('The requested discourse is not available.');
+                        window.location.href = window.location.href.split("/live")[0];
+                    }
+                }else{
+                    // add proper handler for error 
+                    $('Whoops! Something went wrong on our end. Please try again.');
+                    window.location.href = window.location.href.split("/live")[0];
+                }
+            });
+            
+            $.fn.populateDiscourseContent = function(data, status){
+                $('#discourse-name').html(data['name']);
+                $('#discourse-description').html(data['description']);
+                var tag_string = '';
+                for(var i = 0; i < data['tags'].length; i++){
+                    tag_string += '#' + data['tags'][i] + ' ';
+                }
+                $('#discourse-tags').html(tag_string);
+                $('#discourse-start-time').html(data['start_datetime']);
+                $('#discourse-participants').html(data['current_participants']);
+                $('#discourse-listeners').html(data['current_listeners']);
+                
+                // user would have been redirected if not at least allowed to listen
+                if(status != 'ended'){
+                    $('discourse-end-time').html(' | Ended at: ' + data['end_datetime']);
+                }{
+                    var listen_button = document.createElement('button');
+                    listen_button.type = 'button';
+                    listen_button.className = 'btn btn-primary mr-1';
+                    listen_button.onclick = function(){ $.fn.listenToDiscourse() }; 
+                    listen_button.innerHTML = 'Listen to Discourse';
+                    document.getElementById('discourse-actions').appendChild(listen_button);
+
+                    if(status == 'join'){
+                        var join_button = document.createElement('button');
+                        join_button.type = 'button';
+                        join_button.className = 'btn btn-success';
+                        join_button.onclick = function(){ $.fn.joinDiscourse() }; 
+                        join_button.innerHTML = 'Join Discourse';
+                        document.getElementById('discourse-actions').appendChild(join_button);
+                    }
+                }
+            }
+            
+            $.fn.joinDiscourse = function(){
+                //first verify JID secret
+                var auth_array = {
+                    "Type": "Join",
+                    "UDI": UDI,
+                    "JID": JID,
+                    "JID_secret": JID_secret
+                }
+                socket.emit('verify_auth', auth_array, function(err, data){
+                    if(err != 'error'){
+                        if(data != null){
+                            // join the discourse
+                            var nickname = localStorage.getItem(UDI+':'+user_id);
+                            if (!nickname || nickname === '') {
+                               $('#nickNameModal').modal('show');
+                            }else{
+                               var rnameRPC = encodeURIComponent(data);
+                               start(rnameRPC, unameRPC, user_id);
+                               publish(rnameRPC, unameRPC);
+                            }
+                        }
+                    }
+                });  
+            }
+            
+            $.fn.listenToDiscourse = function(){
+                //window.alert(UDI);
+                var auth_array = {
+                    "Type": "Listen",
+                    "UDI": UDI,
+                    "LID": LID,
+                    "LID_secret": LID_secret
+                }
+                socket.emit('verify_auth', auth_array, function(err, data){
+                    console.log(data);
+                    if(err != 'error'){
+                        if(data != null){
+                            // subscribe to the discourse
+                            var rnameRPC = encodeURIComponent(data);
+                            start(rnameRPC, unameRPC, user_id);
+                            subscribe(rnameRPC, unameRPC);
+                        }
+                    }
+                });
+            }
             
         });
             
       </script>
   </head>
   <body>
-    
+      
+    <div class="modal fade" id="nickNameModal" tabindex="-1" aria-labelledby="nickNameModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="nickNameModalLabel">Enter a nickname to join!</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="form-group">
+                <label for="nickname-input" class="col-form-label">Enter a name:</label>
+                <input type="text" class="form-control" id="nickname-input" placeholder="Ex. McLovin">
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" onclick="$.fn.setNickName()" id="enter-discourse">Enter Discourse</button>
+          </div>
+        </div>
+      </div>
+    </div>
     
     <div class="container min-vh-100">
       <div class="row min-vh-100 justify-content-center align-items-center">
         <div class="column col-md-12 text-center"> <!-- class="text-center" -->
-            <h1 class="display-3">Welcome to Discourse</h1> 
-            <h3>Description</h3>
-            <h5>Tags</h5>
+            <h1 class="display-3" id="discourse-name">Discourse Name</h1> 
+            <h3 id="discourse-description">Description</h3>
+            <h4 id="discourse-tags">Tags</h4>
+            <div id="peers"></div>
+            <h5>Began at: <span id="discourse-start-time"></span> <span id="discourse-end-time"></span></h5>
+            <h5><span id="discourse-participants"></span> Participants | <span id="discourse-listeners"> </span> Listeners</h5>
+            <div id="discourse-actions"></div>
             <br>
         </div>
       </div>
-    
-<!--
-      <div class="row justify-content-center align-items-center">
-        <h3>Share your ideas with the world in live, broadcasted audio chat rooms.</h3>
-        <h5>Listen to a public discourse below, or start a new one.</h5>
-      </div>
--->
     </div>
   </body>
 </html>

@@ -17,18 +17,63 @@
     
   </style>
       <script src="node_modules/socket.io-client/dist/socket.io.js"></script>
-        <script>
-           var socket = io("http://127.0.0.1:3000");
+      <script>
+        $( document ).ready(function() {
+            var socket = io("http://127.0.0.1:3000");
 
             // Add a connect listener
             socket.on('connect',function() {
                console.log('Client has connected to the server!');
             });
             
+            //handle jid, lid param requests
+            function getUrlParam(name) {
+                name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+                var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+                var results = regex.exec(window.location.search);
+                return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+            }
             
-        </script>
-      <script>
-        $( document ).ready(function() {
+            var auth_jid = getUrlParam('jid').trim();
+            var auth_lid = getUrlParam('lid').trim();
+            
+            if(auth_jid != ''){
+                //get JID_secret, LID, and LID_secret
+                socket.emit('get_auth_creds_from_jid', auth_jid, function(err, data){
+                   if(err != 'error'){
+                       console.log(data);
+                        var data_to_store = {
+                            "JID": data['JID'],
+                            "JID_secret": data['JID_secret'],
+                            "LID": data['LID'],
+                            "LID_secret": data['LID_secret']
+                        }
+                        localStorage.setItem(data['UDI'], JSON.stringify(data_to_store));
+                        //window.location.href = window.location.href + 'live/' + data['UDI'];
+                   }else{
+                       console.log(err);
+                   }
+                });
+            }
+            
+            if(auth_lid != ''){
+                //get LID, and LID_secret
+                socket.emit('get_auth_creds_from_lid', auth_lid, function(err, data){
+                   if(err != 'error'){
+                       console.log(data);
+                       var data_to_store = {
+                            "JID": null,
+                            "JID_secret": null,
+                            "LID": data['LID'],
+                            "LID_secret": data['LID_secret']
+                        }
+                        localStorage.setItem(data['UDI'], JSON.stringify(data_to_store));
+                        //window.location.href = window.location.href + 'live/' + data['UDI'];
+                   }else{
+                       console.log(err);
+                   }
+                });
+            }
             
             // handle text changer
             $.fn.randomInt = function(max){
@@ -318,17 +363,16 @@
                         discourse_creation_in_progress = true;
                         socket.emit('create_discourse', discourse_info_array, function(err,data){
                             if(err != 'error'){
-                                window.alert(data);
                                 var data_to_store = {
                                     "JID": server_JID,
-                                    "LID": server_LID,
                                     "JID_secret": data['JID_secret'],
+                                    "LID": server_LID,
                                     "LID_secret": data['LID_secret']
                                 }
-                                localStorage.setItem(data['UDI'],  data_to_store);
+                                localStorage.setItem(data['UDI'], JSON.stringify(data_to_store));
                                 window.location.href = window.location.href + 'live/' + data['UDI'];
                             }
-                        })
+                        });
                     }
                 }
             });
