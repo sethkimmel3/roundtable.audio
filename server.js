@@ -1,8 +1,11 @@
 var app = require('express')();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
+
 var mongo = require('mongodb');
 var mongoUtil = require('./MongoConnection.js');
+var krakenAPI = require('./krakenAPIModule.js')
+const fetch = require("node-fetch");
 
 //connect to discourseListDatabase on Startup
 mongoUtil.connectToServer("discourseListDatabase", function(err, client){
@@ -155,7 +158,8 @@ var callfindDiscourseByLIDPromise = async (discourse_LID) => {
 
 io.on('connection', (socket) => {
     console.log('a user connected with socket id: ' + socket.id);
-
+    
+    var auth_creds = {};
 //    var dbo = mongoUtil.getDb();
 //    dbo.collection( 'discourseList').find({}).toArray(function(err,res){
 //        if(err) throw err;
@@ -290,6 +294,8 @@ io.on('connection', (socket) => {
             var user_UDI = auth_data['UDI'];
             var user_JID = auth_data['JID'];
             var user_LID = auth_data['LID'];
+            var user_JID_secret = auth_data['JID_secret'];
+            var user_LID_secret = auth_data['LID_secret'];
             
             callfindDiscourseByUDIPromise(user_UDI).then(function(res){
                var to_return; 
@@ -299,25 +305,32 @@ io.on('connection', (socket) => {
                    
                    if(res[0]['JID'] == null){
                        join_auth = true;
-                   }else if(res[0]['JID'] != null && user_JID == res[0]['JID']){
+                   }else if(res[0]['JID'] != null && user_JID == res[0]['JID'] && user_JID_secret == res[0]['JID_secret']){
                        join_auth = true;
-                   }else if(res[0]['JID'] != null && user_JID != res[0]['JID']){
+                   }else if(res[0]['JID'] != null && (user_JID != res[0]['JID'] || user_JID_secret != res[0]['JID_secret'])){
                        join_auth = false;
                    }
                    
                    if(res['LID'] == null){
                        listen_auth = true;
-                   }else if(res[0]['LID'] != null && user_LID == res[0]['LID']){
+                   }else if(res[0]['LID'] != null && user_LID == res[0]['LID'] && user_LID_secret == res[0]['LID_secret']){
                        listen_auth = true;
-                   }else if(res[0]['LID'] != null && user_LID != res[0]['LID']){
+                   }else if(res[0]['LID'] != null && (user_LID != res[0]['LID'] || user_LID_secret != res[0]['LID_secret'])){
                        listen_auth = false;
+                   }
+                   
+                   var RID = res[0]['RID'];
+                   
+                   auth_creds[user_UDI] = {
+                       'RID': RID,
+                       'join_auth': join_auth,
+                       'listen_auth': listen_auth
                    }
                    
                    to_return = {
                        "name": res[0]['name'],
                        "description": res[0]['description'],
                        "tags": res[0]['tags'],
-                       //"RID": res[0]['RID'],
                        "join_auth": join_auth,
                        "listen_auth": listen_auth,
                        "start_datetime": res[0]['start_datetime'],
@@ -337,44 +350,96 @@ io.on('connection', (socket) => {
         }
     });
     
-    socket.on('verify_auth', function(client_auth_data, handler){
-        // let user attempt to join/listen to discourse
-        try{
-            console.log('Verify auth attempt.');
-            callfindDiscourseByUDIPromise(client_auth_data['UDI']).then(function(res){
-                var to_return;
-                if(res != null && res != "ERROR! More than one discourse with this UDI!"){
-                    var auth; 
-                    
-                    if(client_auth_data['Type'] == 'Join'){
-                        if(res[0]['JID'] == null){
-                            auth = true;
-                        } else if(res[0]['JID'] != null && res[0]['JID'] == client_auth_data['JID'] && res[0]['JID_secret'] == client_auth_data['JID_secret']){
-                            auth = true;
-                        } else{
-                            auth = false;
-                        }
-                    }else if(client_auth_data['Type'] == 'Listen'){
-                        if(res[0]['LID'] == null){
-                            auth = true;
-                        } else if(res[0]['LID'] != null && res[0]['LID'] == client_auth_data['LID'] && res[0]['LID_secret'] == client_auth_data['LID_secret']){
-                            auth = true;
-                        } else{
-                            auth = false;
-                        }
-                    }
-                    
-                    if(auth){
-                        to_return = res[0]['RID'];
-                    }else{
-                        to_return = null;
-                    }
-                }else{
-                    console.log(res);
-                    to_return = null;
-                }
-                handler(null, to_return);
-            });
+    socket.on('trickle', function(trickle_data, handler){
+        try {
+            var UDI = trickle_data['UDI'];
+            if(auth_creds[UDI]['join_auth'] == true || auth_creds[UDI]['listen_auth'] == true){
+                var rnameRPC = encodeURIComponent(auth_creds[UDI]['RID']);
+                var unameRPC = trickle_data['unameRPC'];
+                var ucid = trickle_data['ucid'];
+                var candidate = trickle_data['candidate'];
+
+                krakenAPI.trickle(rnameRPC, unameRPC, ucid, JSON.stringify(candidate));
+            }
+        } catch(error){
+            handler(error, null);
+        }
+    })
+    
+    socket.on('publish', function(publish_data, handler){
+        try {
+            var UDI = publish_data['UDI'];
+            if(auth_creds[UDI]['join_auth'] == true && auth_creds[UDI]['listen_auth'] == true){
+                var rnameRPC = encodeURIComponent(auth_creds[UDI]['RID']);
+                var unameRPC = publish_data['unameRPC'];
+                var localDescription = publish_data['localDescription'];
+
+                krakenAPI.publish(rnameRPC, unameRPC, localDescription).then(function(result){
+                    console.log(result);
+                    handler('null', result); 
+                });
+            }else{
+                handler('null', 'join not permitted');
+            }
+        } catch(error){
+            handler(error, null);
+        }
+    });
+    
+    socket.on('subscribe', function(subscribe_data, handler){
+        try {
+            var UDI = subscribe_data['UDI'];
+            if(auth_creds[UDI]['listen_auth'] == true){
+                var rnameRPC = encodeURIComponent(auth_creds[UDI]['RID']);
+                var unameRPC = subscribe_data['unameRPC'];
+                var ucid = subscribe_data['ucid'];
+
+                krakenAPI.subscribe(rnameRPC, unameRPC, ucid).then(function(result){
+                    console.log(result);
+                    handler('null', result);
+                });
+            }else{
+                handler('null', 'listen not permitted');
+            }
+        } catch(error){
+            handler(error, null);
+        }
+    });
+    
+    socket.on('answer', function(answer_data, handler){
+        try {
+            var UDI = answer_data['UDI'];
+            if(auth_creds[UDI]['listen_auth'] == true){
+                var rnameRPC = encodeURIComponent(auth_creds[UDI]['RID']);
+                var unameRPC = answer_data['unameRPC'];
+                var ucid = answer_data['ucid'];
+                var sdp = answer_data['sdp'];
+
+                krakenAPI.answer(rnameRPC, unameRPC, ucid, sdp);
+            }else{
+                handler('null', 'listen not permitted');
+            }
+        } catch(error){
+            handler(error, null);
+        }
+    });
+    
+    
+    socket.on('registerListenOnlyPeer', function(register_listen_only_peer_data, handler){
+        try {
+            var UDI = register_listen_only_peer_data['UDI'];
+            if(auth_creds[UDI]['listen_auth'] == true){
+                var rnameRPC = encodeURIComponent(auth_creds[UDI]['RID']);
+                var unameRPC = register_listen_only_peer_data['unameRPC'];
+                var localDescription = register_listen_only_peer_data['localDescription'];
+
+                krakenAPI.registerListenOnlyPeer(rnameRPC, unameRPC, localDescription).then(function(result){
+                    console.log(result);
+                    handler('null', result);
+                });
+            }else{
+                handler('null', 'listen only not permitted');
+            }
         } catch(error){
             handler(error, null);
         }
@@ -382,6 +447,9 @@ io.on('connection', (socket) => {
         
 });
 
-http.listen(3000, () => {
+port = 3000;
+hostname = 'localhost';
+
+http.listen(port, hostname, () => {
     console.log('listening on *:3000');
 }); 

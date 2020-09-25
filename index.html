@@ -19,8 +19,10 @@
       <script src="node_modules/socket.io-client/dist/socket.io.js"></script>
       <script>
         $( document ).ready(function() {
-            var socket = io("http://127.0.0.1:3000");
-
+            //var socket = io("http://127.0.0.1:3000");
+            //var socket = io("/");
+            var socket = io.connect("https://discourse.fm");
+  
             // Add a connect listener
             socket.on('connect',function() {
                console.log('Client has connected to the server!');
@@ -75,25 +77,10 @@
                 });
             }
             
-            // handle text changer
-            $.fn.randomInt = function(max){
-                return Math.floor(Math.random() * Math.floor(max));
-            }
             
-            $.fn.rotateTextChanger = function(words, iIndex){
-               $('#textchanger').html(words[iIndex]).fadeIn(1500, function(){
-                    var newIndex = $.fn.randomInt(words.length);
-                    while(newIndex == iIndex){
-                        newIndex = $.fn.randomInt(words.length);
-                    }
-                    iIndex = newIndex;
-                    $('#textchanger').fadeOut(1500, function(){
-                        $.fn.rotateTextChanger(words, iIndex);
-                    })
-                }) 
-            }
             
-            var words = ['share your ideas.', 
+            var rtc = function(timestamp){
+               var words = ['share your ideas.', 
                          'learn something new.', 
                          'debate a topic.',
                          'host an interview.',
@@ -105,7 +92,48 @@
                          'promote your brand.',
                          'reconnect with the world.',
                          'drive the conversation forward.'];
-            //$.fn.rotateTextChanger(words, 0);
+               var i = Math.floor(Math.random() * Math.floor(words.length));
+               $('#textchanger').html(words[i]).fadeIn(1500, function(){
+                    $('#textchanger').fadeOut(1500, function(){
+                        window.requestAnimationFrame(rtc);  
+                    })
+               })
+            }
+            
+            // window.requestAnimationFrame(rtc);
+            
+            // handle text changer
+//            $.fn.randomInt = function(max){
+//                return Math.floor(Math.random() * Math.floor(max));
+//            }
+            
+//            $.fn.rotateTextChanger = function(words, iIndex){
+//               $('#textchanger').html(words[iIndex]).fadeIn(1500, function(){
+//                    var newIndex = $.fn.randomInt(words.length);
+//                    while(newIndex == iIndex){
+//                        newIndex = $.fn.randomInt(words.length);
+//                    }
+//                    iIndex = newIndex;
+//                    $('#textchanger').fadeOut(1500, function(){
+//                        $.fn.rotateTextChanger(words, iIndex);
+//                    })
+//                }) 
+//            }
+//            
+//            var words = ['share your ideas.', 
+//                         'learn something new.', 
+//                         'debate a topic.',
+//                         'host an interview.',
+//                         'catch up with friends.',
+//                         'meet new people.',
+//                         'start a podcast.',
+//                         'find inspiration.',
+//                         'bridge the divide.',
+//                         'promote your brand.',
+//                         'reconnect with the world.',
+//                         'drive the conversation forward.'];
+//            
+//            $.fn.rotateTextChanger(words, 0);
             
             // handle adding existing discourses 
             $.fn.addDiscourseCard = function(title, tag_list, description, n_participants, n_listeners, listen_link, join_link){

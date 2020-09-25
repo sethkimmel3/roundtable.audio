@@ -1,5 +1,6 @@
 //window.onload = function() {
 const KRAKEN_API = 'https://rpc.discourse.fm';
+//const KRAKEN_API = 'http://localhost:7000';
 const TURNSERVER = 'turn:104.131.28.192:5349';
 
 const constraints = {
@@ -23,7 +24,6 @@ const audioCtx = new AudioContext();
     
 
 var ucid = "";
-    
 
 function uuidv4() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -55,6 +55,7 @@ async function rpc(method, params = []) {
     
 async function subscribe(rnameRPC, unameRPC) {
     var res = await rpc('subscribe', [rnameRPC, unameRPC, ucid]);
+    console.log(res);
     if (res.error && typeof res.error === 'string' && res.error.indexOf(unameRPC + ' not found in')) {
       pc.close();
       await start();
@@ -68,7 +69,7 @@ async function subscribe(rnameRPC, unameRPC) {
       await rpc('answer', [rnameRPC, unameRPC, ucid, JSON.stringify(sdp)]);
     }
     setTimeout(function () {
-      subscribe(pc);
+      subscribe(rnameRPC, unameRPC);
     }, 3000);
   } 
 
@@ -85,17 +86,31 @@ async function publish(rnameRPC, unameRPC){
         return;
       }
     
-    
     stream.getTracks().forEach((track) => {
         pc.addTrack(track, stream);
-      });
-      await pc.setLocalDescription(await pc.createOffer());
+    });
+    await pc.setLocalDescription(await pc.createOffer());
     
     var res = await rpc('publish', [rnameRPC, unameRPC, JSON.stringify(pc.localDescription)]);
+    //var res = await rpc('publish', [rnameRPC, unameRPC, JSON.stringify(pc.localDescription), 0, "", "true"]);
+      console.log(res);
       if (res.data && res.data.sdp.type === 'answer') {
         await pc.setRemoteDescription(res.data.sdp);
         ucid = res.data.track;
-        subscribe(pc);
+        subscribe(rnameRPC, unameRPC);
+      }
+}
+
+async function publish_blank(rnameRPC, unameRPC){
+    await pc.setLocalDescription(await pc.createOffer());
+    var uname = uuidv4() + ':' + Base64.encode('null');
+    var unameRPC = encodeURIComponent(uname);
+    var res = await rpc('registerListenOnlyPeer', [rnameRPC, unameRPC, JSON.stringify(pc.localDescription)]);
+      console.log(res);
+      if (res.data && res.data.sdp.type === 'answer') {
+        await pc.setRemoteDescription(res.data.sdp);
+        ucid = res.data.track;
+        subscribe(rnameRPC, unameRPC);
       }
 }
     

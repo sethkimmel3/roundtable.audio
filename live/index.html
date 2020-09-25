@@ -18,10 +18,12 @@
   </style>
       <script src="../node_modules/socket.io-client/dist/socket.io.js"></script>
       <script src="../Base64.js"></script>
-      <script src="../krakenapi.js"></script>
+      <!--<script src="../krakenapi.js"></script>-->
+      <script src="../krakenclient.js"></script>
       <script>
         $( document ).ready(function() {
             var socket = io("http://127.0.0.1:3000");
+            //var socket = io.connect("https://discourse.fm");
             // Add a connect listener
             socket.on('connect',function() {
                console.log('Client has connected to the server!');
@@ -43,6 +45,7 @@
             
             var pathSplit = location.pathname.split('/')
             var UDI = pathSplit[pathSplit.length - 1];
+            
             
             var nickname = localStorage.getItem(UDI+':'+user_id);
             if(nickname != null){
@@ -94,7 +97,9 @@
             var auth_into_discourse_array = {
                 "UDI": UDI,
                 "JID": JID,
-                "LID": LID
+                "LID": LID,
+                "JID_secret": JID_secret,
+                "LID_secret": LID_secret
             }
                 
             socket.emit('auth_into_discourse', auth_into_discourse_array, function(err,data){
@@ -169,49 +174,18 @@
             }
             
             $.fn.joinDiscourse = function(){
-                //first verify JID secret
-                var auth_array = {
-                    "Type": "Join",
-                    "UDI": UDI,
-                    "JID": JID,
-                    "JID_secret": JID_secret
+                var nickname = localStorage.getItem(UDI+':'+user_id);
+                if (!nickname || nickname === '') {
+                   $('#nickNameModal').modal('show');
+                }else{
+                     start_client(UDI, unameRPC, user_id, socket);
+                     publish_client(UDI, unameRPC, socket);
                 }
-                socket.emit('verify_auth', auth_array, function(err, data){
-                    if(err != 'error'){
-                        if(data != null){
-                            // join the discourse
-                            var nickname = localStorage.getItem(UDI+':'+user_id);
-                            if (!nickname || nickname === '') {
-                               $('#nickNameModal').modal('show');
-                            }else{
-                               var rnameRPC = encodeURIComponent(data);
-                               start(rnameRPC, unameRPC, user_id);
-                               publish(rnameRPC, unameRPC);
-                            }
-                        }
-                    }
-                });  
             }
             
             $.fn.listenToDiscourse = function(){
-                //window.alert(UDI);
-                var auth_array = {
-                    "Type": "Listen",
-                    "UDI": UDI,
-                    "LID": LID,
-                    "LID_secret": LID_secret
-                }
-                socket.emit('verify_auth', auth_array, function(err, data){
-                    console.log(data);
-                    if(err != 'error'){
-                        if(data != null){
-                            // subscribe to the discourse
-                            var rnameRPC = encodeURIComponent(data);
-                            start(rnameRPC, unameRPC, user_id);
-                            subscribe(rnameRPC, unameRPC);
-                        }
-                    }
-                });
+                    start_client(UDI, unameRPC, user_id, socket);
+                    publish_blank_client(UDI, unameRPC, socket);
             }
             
         });
