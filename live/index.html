@@ -20,10 +20,11 @@
       <script src="../Base64.js"></script>
       <!--<script src="../krakenapi.js"></script>-->
       <script src="../krakenclient.js"></script>
+      <script src="../roundtable.js"></script>
       <script>
         $( document ).ready(function() {
-            var socket = io("http://127.0.0.1:3000");
-            //var socket = io.connect("https://discourse.fm");
+            //var socket = io("http://127.0.0.1:3000");
+            var socket = io.connect("https://discourse.fm");
             // Add a connect listener
             socket.on('connect',function() {
                console.log('Client has connected to the server!');
@@ -75,6 +76,7 @@
                         uname = user_id + ':' + Base64.encode(nickname);
                         unameRPC = encodeURIComponent(uname);
                         $('#nickNameModal').modal('hide');
+                        $.fn.joinDiscourse();
                     }
             }
             
@@ -178,21 +180,22 @@
                 if (!nickname || nickname === '') {
                    $('#nickNameModal').modal('show');
                 }else{
-                     start_client(UDI, unameRPC, user_id, socket);
-                     publish_client(UDI, unameRPC, socket);
+                     start_client('participant', UDI, unameRPC, user_id, socket);
+                     publish_client(UDI, unameRPC, user_id, socket);
+                     $.fn.addSeat(nickname, user_id, true);
                 }
             }
             
             $.fn.listenToDiscourse = function(){
-                    start_client(UDI, unameRPC, user_id, socket);
-                    publish_blank_client(UDI, unameRPC, socket);
+                    start_client('listen_only', UDI, '', '', socket);
+                    register_listen_only_peer_client(UDI, socket); 
             }
             
         });
             
       </script>
   </head>
-  <body>
+  <body> 
       
     <div class="modal fade" id="nickNameModal" tabindex="-1" aria-labelledby="nickNameModalLabel" aria-hidden="true">
       <div class="modal-dialog">
@@ -226,8 +229,11 @@
             <h3 id="discourse-description">Description</h3>
             <h4 id="discourse-tags">Tags</h4>
             <div id="peers"></div>
+<!--
             <h5>Began at: <span id="discourse-start-time"></span> <span id="discourse-end-time"></span></h5>
             <h5><span id="discourse-participants"></span> Participants | <span id="discourse-listeners"> </span> Listeners</h5>
+-->
+            <canvas id="roundtable"></canvas>
             <div id="discourse-actions"></div>
             <br>
         </div>

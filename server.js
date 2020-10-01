@@ -395,7 +395,7 @@ io.on('connection', (socket) => {
                 var ucid = subscribe_data['ucid'];
 
                 krakenAPI.subscribe(rnameRPC, unameRPC, ucid).then(function(result){
-                    console.log(result);
+                    //console.log(result);
                     handler('null', result);
                 });
             }else{
@@ -434,7 +434,7 @@ io.on('connection', (socket) => {
                 var localDescription = register_listen_only_peer_data['localDescription'];
 
                 krakenAPI.registerListenOnlyPeer(rnameRPC, unameRPC, localDescription).then(function(result){
-                    console.log(result);
+                    //console.log(result);
                     handler('null', result);
                 });
             }else{

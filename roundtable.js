@@ -159,7 +159,7 @@ $( document ).ready(function() {
         addSeat(name, id, isUser);
     }
 
-    $.fn.removeSeat = function(name, id, isUser){
+    $.fn.removeSeat = function(id){
         //var name = Math.floor(Math.random() * seats.length).toString();
         removeSeat(id);
     }

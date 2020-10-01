@@ -4,25 +4,6 @@ const KRAKEN_API = 'http://localhost:7000';
 const TURNSERVER = 'turn:104.131.28.192:5349';
 const fetch = require("node-fetch");
 
-const constraints = {
-    audio: true,
-    video: false
-};
-const configuration = {
-    iceServers: [{
-    urls: TURNSERVER,
-    username: "guest",
-    credential: "somepassword"
-}],
-    iceTransportPolicy: 'relay',
-    bundlePolicy: 'max-bundle',
-    rtcpMuxPolicy: 'require',
-    sdpSemantics: 'unified-plan'
-};
-
-//const AudioContext = window.AudioContext || window.webkitAudioContext;
-//const audioCtx = new AudioContext();
-
 obj = {
     uuidv4: function() {
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -53,7 +34,7 @@ obj = {
       } ,
 
     trickle: async function(rnameRPC, unameRPC, ucid, candidate) {
-        await obj.rpc('answer', [rnameRPC, unameRPC, ucid, candidate]);
+        await obj.rpc('trickle', [rnameRPC, unameRPC, ucid, candidate]);
     } , 
     
     answer: async function(rnameRPC, unameRPC, ucid, sdp) {
