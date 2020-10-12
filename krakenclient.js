@@ -32,7 +32,6 @@ function uuidv4() {
   }
     
 async function subscribe_client(UDI, unameRPC, socket) {
-    //var res = await rpc('subscribe', [rnameRPC, unameRPC, ucid]);
     var subscribe_data = {
         "UDI": UDI,
         "unameRPC": unameRPC,
@@ -50,7 +49,6 @@ async function subscribe_client(UDI, unameRPC, socket) {
           await pc.setRemoteDescription(res.data);
           var sdp = await pc.createAnswer();
           await pc.setLocalDescription(sdp);
-          //await rpc('answer', [rnameRPC, unameRPC, ucid, JSON.stringify(sdp)]);
           var answer_data = {
               "UDI": UDI,
               "unameRPC": unameRPC,
@@ -59,7 +57,7 @@ async function subscribe_client(UDI, unameRPC, socket) {
           }
           
           socket.emit('answer', answer_data, function(err, res){
-              console.log('here'); 
+              console.log('answer'); 
               //handle error
           });
         }
@@ -109,7 +107,6 @@ async function register_listen_only_peer_client(UDI, socket){
     await pc.setLocalDescription(await pc.createOffer());
     var uname = uuidv4() + ':' + Base64.encode('');
     var unameRPC = encodeURIComponent(uname);
-    //var res = await rpc('registerListenOnlyPeer', [rnameRPC, unameRPC, JSON.stringify(pc.localDescription)]);
     var register_listen_only_peer_data = {
         'UDI': UDI,
         'unameRPC': unameRPC,
@@ -133,10 +130,22 @@ async function start_client(client_type, UDI, unameRPC, user_id, socket) {
           unameRPC = encodeURIComponent(uname);
           user_id = uuidv4();
           ucid = "";
-          console.log('here');
       } 
+     
+// CHECK THIS OUT LATER
+//      var turn_data = {
+//          'unameRPC': unameRPC
+//      }
+//      socket.emit('turn', turn_data, function(err, res){
+//          if (res.data && res.data.length > 0) {
+//            configuration.iceServers = res.data;
+//            configuration.iceTransportPolicy = 'relay';
+//          } else {
+//            configuration.iceServers = [];
+//            configuration.iceTransportPolicy = 'all';
+//          }        
+//      });
         
-      console.log('User ID: ' + user_id);
       pc = new RTCPeerConnection(configuration);
       pc.createDataChannel('useless'); // FIXME remove this line
       pc.onicecandidate = ({candidate}) => {
@@ -150,7 +159,6 @@ async function start_client(client_type, UDI, unameRPC, user_id, socket) {
             console.log(err);
             console.log(data);
         })
-        //rpc('trickle', [rnameRPC, unameRPC, ucid, JSON.stringify(candidate)]);
       };
 
       pc.ontrack = (event) => {

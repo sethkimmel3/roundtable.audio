@@ -30,7 +30,7 @@ $( document ).ready(function() {
 
     var outerRadius = roundtable_width/2.8;
 
-    var seats = [];      
+    var seats = [];
 
     var steps = 50;
     var moving = false;
@@ -100,6 +100,7 @@ $( document ).ready(function() {
             "name": name,
             "id": id,
             "isUser": isUser,
+            "isMuted": false,
             "color": seatColor,
             "currentAngle": 0,
             "destAngle": 0

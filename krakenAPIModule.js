@@ -33,6 +33,12 @@ obj = {
         }
       } ,
 
+    turn: async function(unameRPC) {
+        var res = await obj.rpc('turn', [unameRPC]);
+        console.log(res);
+        return res; 
+    } , 
+    
     trickle: async function(rnameRPC, unameRPC, ucid, candidate) {
         await obj.rpc('trickle', [rnameRPC, unameRPC, ucid, candidate]);
     } , 

@@ -35,7 +35,7 @@
                 var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
                 return v.toString(16);
                });
-            }
+            } 
             
             //get user id, or set if doesn't exist
             var user_id = localStorage.getItem('user_id');
@@ -46,7 +46,6 @@
             
             var pathSplit = location.pathname.split('/')
             var UDI = pathSplit[pathSplit.length - 1];
-            
             
             var nickname = localStorage.getItem(UDI+':'+user_id);
             if(nickname != null){
@@ -103,6 +102,9 @@
                 "JID_secret": JID_secret,
                 "LID_secret": LID_secret
             }
+            
+            var current_listeners = 0;
+            var current_participants = 0;
                 
             socket.emit('auth_into_discourse', auth_into_discourse_array, function(err,data){
                 if(err != 'error'){
@@ -131,12 +133,12 @@
                         }
                     }else{
                         // add proper handler for non-available discourse or UDI collision
-                        $('The requested discourse is not available.');
+                        window.alert('The requested discourse is not available.');
                         window.location.href = window.location.href.split("/live")[0];
                     }
                 }else{
                     // add proper handler for error 
-                    $('Whoops! Something went wrong on our end. Please try again.');
+                    window.alert('Whoops! Something went wrong on our end. Please try again.');
                     window.location.href = window.location.href.split("/live")[0];
                 }
             });
@@ -152,6 +154,7 @@
                 $('#discourse-start-time').html(data['start_datetime']);
                 $('#discourse-participants').html(data['current_participants']);
                 $('#discourse-listeners').html(data['current_listeners']);
+                $.fn.updateListeners(data['current_listeners']);
                 
                 // user would have been redirected if not at least allowed to listen
                 if(status != 'ended'){
@@ -183,13 +186,50 @@
                      start_client('participant', UDI, unameRPC, user_id, socket);
                      publish_client(UDI, unameRPC, user_id, socket);
                      $.fn.addSeat(nickname, user_id, true);
+                     var connection_data = {
+                         "UDI": UDI,
+                         "user_id": user_id,
+                         "connection_type": "join"
+                     }
+                     socket.emit('connectToDiscourse', connection_data, function(err, data){
+                         if(err == null){
+                             $.fn.updateListeners(data['current_listeners']);
+                         }
+                     });
                 }
             }
             
             $.fn.listenToDiscourse = function(){
                     start_client('listen_only', UDI, '', '', socket);
                     register_listen_only_peer_client(UDI, socket); 
+                    var connection_data = {
+                         "UDI": UDI,
+                         "user_id": user_id,
+                         "connection_type": "listen"
+                     }
+                     socket.emit('connectToDiscourse', connection_data, function(err, data){
+                         if(err == null){
+                             $.fn.updateListeners(data['current_listeners']);
+                         }
+                     });
             }
+            
+            socket.on('updateDiscourseCount', function(count_data, handler){
+                console.log(count_data);
+                if(count_data['type'] == 'values'){
+                    current_listeners = parseInt(count_data['current_listeners']);
+                    current_participants = parseInt(count_data['current_participants']);
+                }else if(count_data['type'] == 'add_participant'){
+                    current_participants += 1;
+                }else if(count_data['type'] == 'add_listener'){ 
+                    current_listeners += 1;
+                }else if(count_data['type'] == 'subtract_participant'){
+                    current_participants -= 1;
+                }else if(count_data['type'] == 'subtract_listener'){
+                    current_listeners -= 1;
+                }
+                $.fn.updateListeners(current_listeners);
+            });
             
         });
             
