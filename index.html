@@ -19,9 +19,9 @@
       <script src="node_modules/socket.io-client/dist/socket.io.js"></script>
       <script>
         $( document ).ready(function() {
-            //var socket = io("http://127.0.0.1:3000");
+            var socket = io("http://127.0.0.1:3000");
             //var socket = io("/");
-            var socket = io.connect("https://discourse.fm");
+            //var socket = io.connect("https://discourse.fm");
   
             // Add a connect listener
             socket.on('connect',function() {
@@ -136,19 +136,40 @@
 //            $.fn.rotateTextChanger(words, 0);
             
             // handle adding existing discourses 
-            $.fn.addDiscourseCard = function(title, tag_list, description, n_participants, n_listeners, listen_link, join_link){
-                tags = ''
+            $.fn.addDiscourseCard = function(title, tag_list, description, n_participants, n_listeners, public_join, public_listen, discourse_URL){
+                tags_to_show = ''
                 $.each(tag_list, function(index, value){
                    tag = '<span class="badge badge-secondary mr-1">#' + value + '</span>';
-                   tags += tag;
+                   tags_to_show += tag;
                 });
-                var discourseCard = '<div class="column mr-3"><div class="card" style="width: 18rem;"><div class="card-body"><h5 class="card-title">' + title + '</h5><h6 class="card-subtitle mb-2 text-muted">' + tags + '</h6><p class="card-text">' + description + '</p><p>' + n_participants  + ' Participants | ' + n_listeners + ' Listeners</p><button type="button" class="btn btn-warning mr-3" href="' + join_link + '" class="card-link">Join</button><button type="button" class="btn btn-primary" href="' + listen_link + '" class="card-link">Listen</button></div></div></div>';
+                if(public_join){
+                    var join_span = '<span style="color:#28a745;">Public Join <img src="icons/check2-green.svg" /></span>';
+                }else{
+                     var join_span = '<span style="color:#dc3545;">Private to Join <img src="icons/x-red.svg" /></span>';
+                }
+                if(public_listen){
+                    var listen_span = '<span style="color:#28a745;">Public Listen <img src="icons/check2-green.svg"></span>';
+                }else{
+                    var listen_span = '<span style="color:#dc3545;">Private Listen <img src="icons/x-red.svg"></span>';
+                }
+                var discourseCard = '<div class="column mr-3"><div class="card" style="width: 18rem;"><div class="card-body"><h5 class="card-title">' + title + '</h5><h6 class="card-subtitle mb-2 text-muted">' + tags_to_show + '</h6><p class="card-text">' + description + '</p><p>' + n_participants  + ' Participants | ' + n_listeners + ' Listeners</p>' + join_span + ' | ' + listen_span + '<br><br><button type="button" class="btn btn-success" href="' + discourse_URL + '" class="card-link">Go to Discourse <img src="icons/sign-in-white.svg" /></button></div></div></div>';
                 $('#discourseCards').append(discourseCard);
             }
             
-            for(i = 0; i < 10; i++){
-                $.fn.addDiscourseCard('Example Title', ['something', 'another', 'one'], "This is an example description. I'm not sure if the quote will mess it up.", 10, 153, '#', '#');
-            }
+            socket.emit('getActiveDiscourses', null, function(err, res){
+                
+                 for(i = 0; i < res.length; i++){
+                    var received_title = res[i]['name'];
+                    var received_tags = res[i]['tags'];
+                    var received_description = res[i]['description'];
+                    var received_n_participants = res[i]['current_participants'];
+                    var received_n_listeners = res[i]['current_listeners'];
+                    var received_public_join = res[i]['public_join'];
+                    var received_public_listen = res[i]['public_listen'];
+                    var received_discourse_URL = 'https://discourse.fm/live/' + res[i]['UDI']; 
+                    $.fn.addDiscourseCard(received_title, received_tags, received_description, received_n_participants, received_n_listeners, received_public_join, received_public_listen, received_discourse_URL);
+                }
+            });
             
             // handle discourse creation
             var join_id;

@@ -5,6 +5,7 @@
     "dependencies": {
         "express": "^4.15.2",
         "mongodb": "^3.6.0",
+        "node-cron": "^2.0.3",
         "node-fetch": "^2.6.1",
         "socket.io": "^2.3.0"
     }

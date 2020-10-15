@@ -4,8 +4,9 @@ var io = require('socket.io')(http);
 
 var mongo = require('mongodb');
 var mongoUtil = require('./MongoConnection.js');
-var krakenAPI = require('./krakenAPIModule.js')
+var krakenAPI = require('./krakenAPIModule.js');
 const fetch = require("node-fetch");
+var cron = require('node-cron');
 
 //connect to discourseListDatabase on Startup
 mongoUtil.connectToServer("discourseListDatabase", function(err, client){
@@ -88,7 +89,8 @@ var findDiscourseByUDIPromise = (discourse_UDI) => (
     new Promise((resolve, reject) => {
         var dbo = mongoUtil.getDb();
         var query = {
-            UDI: discourse_UDI
+            UDI: discourse_UDI,
+            end_datetime: null
         }
         dbo.collection("discourseList").find(query).toArray(function(e, res){ 
             if(e) throw e;
@@ -196,11 +198,6 @@ io.on('connection', (socket) => {
     console.log('a user connected with socket id: ' + socket.id);
     var auth_creds = {};
     var connection_state = null;
-//    var dbo = mongoUtil.getDb();
-//    dbo.collection( 'discourseList').find({}).toArray(function(err,res){
-//        if(err) throw err;
-//        console.log(res);
-//    });
     
      socket.on('disconnecting', () => {
         if(Object.keys(auth_creds).length > 0){
@@ -244,14 +241,18 @@ io.on('connection', (socket) => {
 
                 if(join_visibility === 'private'){
                     var discourse_JID_secret = createSecretId(16);
+                    var public_join = false;
                 }else{
                     var discourse_JID_secret = null;
+                    var public_join = true;
                 }
 
                 if(listen_visibility === 'private'){
                     var discourse_LID_secret = createSecretId(16);
+                    var public_listen = false;
                 }else{
                     var discourse_LID_secret = null;
+                    var public_listen = true;
                 }
 
                 var datetime = new Date();
@@ -274,6 +275,8 @@ io.on('connection', (socket) => {
                     JID_secret: discourse_JID_secret,
                     LID: discourse_LID, 
                     LID_secret: discourse_LID_secret, 
+                    public_join: public_join,
+                    public_listen: public_listen,
                     start_datetime: discourse_start_datetime,
                     end_datetime: discourse_end_datetime,
                     current_participants: discourse_current_participants,
@@ -595,7 +598,55 @@ io.on('connection', (socket) => {
             handler(error, null);
         }
     });
+    
+    socket.on('getActiveDiscourses', function(data, handler){
+        try { 
+            var dbo = mongoUtil.getDb();
+            var query = { end_datetime: null };
+            var exclude = {JID:0, JID_secret:0, LID:0, LID_secret:0, RID:0, max_participants:0, max_listeners:0, _id:0};
+            dbo.collection("discourseList").find(query).project(exclude).toArray(function(e, res){ 
+                console.log(res);
+                handler(null, res);
+            })
+        } catch(err){
+            handler(err, null);
+        }
+    });
         
+});
+
+// every six hours this will end discourses that either have no active participants and have been active for more than 3 hours, or have been active for more than 24 hours (in case of a bug in tracking number of participants)
+cron.schedule('* * 0,6,12,18 * * *', () =>{
+    try { 
+        var dbo = mongoUtil.getDb();
+        var query = { end_datetime: null };
+        dbo.collection("discourseList").find(query).toArray(function(e, res){ 
+            if(e) throw e;
+            var to_end = [];
+            var now = Date.now();
+            for(var i = 0; i < res.length; i++){
+                var UDI = res[i]['UDI'];
+                var start_datetime = Date.parse(res[i]['start_datetime']);
+                var days_elapsed = (now - start_datetime)/86400000;
+                var current_participants = res[i]['current_participants'];
+                if((current_participants == 0 && days_elapsed >= 0.125) || days_elapsed >= 1.0){
+                    to_end.push(UDI);
+                }
+            }
+            var datetime = new Date();
+            var end_time = datetime.toUTCString();
+            if(to_end.length > 0){
+                var query = { UDI: { $in: to_end } };
+                var update = { $set: {end_datetime: end_time } };
+                dbo.collection("discourseList").updateMany(query, update, function(err, result){
+                    if(err) throw err;
+                    console.log("Automatically ended the following discourses: " + to_end.toString())
+                });
+            }
+        });
+    } catch(error){
+        console.log(error);
+    }
 });
 
 port = 3000;
