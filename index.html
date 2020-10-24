@@ -14,14 +14,52 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
     <title>Discourse.FM</title>
   <style>
-    
+        .card {
+          position: relative;
+          min-width: 300px;
+          height: auto;
+          overflow: hidden;
+          border-radius: 15px;
+          margin: 0 auto;
+          padding: 20px 20px;
+          transition: .5s;
+          cursor: pointer;
+          display: inline-block
+        }
+        .card:hover { 
+          box-shadow: 0 10px 15px rgba(0,0,0,0.3);
+        }
+        a.nostyle:link {
+            text-decoration: inherit;
+            color: inherit;
+            cursor: auto;
+        }
+
+        a.nostyle:visited {
+            text-decoration: inherit;
+            color: inherit;
+            cursor: auto;
+        }
+      
+      .navbar-fixed-left {
+          width: auto;
+          position: fixed;
+          padding: 5px;
+          height: 100%;
+          display: block;
+        }
+
+        .navbar-fixed-left .navbar-nav > li {
+          float: none;  /* Cancel default li float: left */
+          width: auto;
+        }
   </style>
-      <script src="node_modules/socket.io-client/dist/socket.io.js"></script>
+      <script src="socket.io-client/dist/socket.io.js"></script>
       <script>
         $( document ).ready(function() {
-            var socket = io("http://127.0.0.1:3000");
-            //var socket = io("/");
+            var socket = io.connect("http://127.0.0.1:3000");
             //var socket = io.connect("https://discourse.fm");
+            //var socket = io.connect("/");
   
             // Add a connect listener
             socket.on('connect',function() {
@@ -77,8 +115,6 @@
                 });
             }
             
-            
-            
             var rtc = function(timestamp){
                var words = ['share your ideas.', 
                          'learn something new.', 
@@ -100,43 +136,10 @@
                })
             }
             
-            // window.requestAnimationFrame(rtc);
-            
-            // handle text changer
-//            $.fn.randomInt = function(max){
-//                return Math.floor(Math.random() * Math.floor(max));
-//            }
-            
-//            $.fn.rotateTextChanger = function(words, iIndex){
-//               $('#textchanger').html(words[iIndex]).fadeIn(1500, function(){
-//                    var newIndex = $.fn.randomInt(words.length);
-//                    while(newIndex == iIndex){
-//                        newIndex = $.fn.randomInt(words.length);
-//                    }
-//                    iIndex = newIndex;
-//                    $('#textchanger').fadeOut(1500, function(){
-//                        $.fn.rotateTextChanger(words, iIndex);
-//                    })
-//                }) 
-//            }
-//            
-//            var words = ['share your ideas.', 
-//                         'learn something new.', 
-//                         'debate a topic.',
-//                         'host an interview.',
-//                         'catch up with friends.',
-//                         'meet new people.',
-//                         'start a podcast.',
-//                         'find inspiration.',
-//                         'bridge the divide.',
-//                         'promote your brand.',
-//                         'reconnect with the world.',
-//                         'drive the conversation forward.'];
-//            
-//            $.fn.rotateTextChanger(words, 0);
+             window.requestAnimationFrame(rtc);
             
             // handle adding existing discourses 
-            $.fn.addDiscourseCard = function(title, tag_list, description, n_participants, n_listeners, public_join, public_listen, discourse_URL){
+            $.fn.addDiscourseCard = function(title, tag_list, description, n_participants, n_listeners, public_join, public_listen, UDI){
                 tags_to_show = ''
                 $.each(tag_list, function(index, value){
                    tag = '<span class="badge badge-secondary mr-1">#' + value + '</span>';
@@ -152,22 +155,30 @@
                 }else{
                     var listen_span = '<span style="color:#dc3545;">Private Listen <img src="icons/x-red.svg"></span>';
                 }
-                var discourseCard = '<div class="column mr-3"><div class="card" style="width: 18rem;"><div class="card-body"><h5 class="card-title">' + title + '</h5><h6 class="card-subtitle mb-2 text-muted">' + tags_to_show + '</h6><p class="card-text">' + description + '</p><p>' + n_participants  + ' Participants | ' + n_listeners + ' Listeners</p>' + join_span + ' | ' + listen_span + '<br><br><button type="button" class="btn btn-success" href="' + discourse_URL + '" class="card-link">Go to Discourse <img src="icons/sign-in-white.svg" /></button></div></div></div>';
+                //<img src="icons/arrow-right-circle-fill-grey.svg" style="float:right; height:35px;width:auto;"/>
+                var discourseCard = '<a class="nostyle" href="live/' + UDI + '"><div class="card" style="" data-UDI="' + UDI + '"><div class="card-body"><h4 class="card-title">' + title + '</h4><h6 class="card-subtitle mb-2 text-muted">' + tags_to_show + '</h6><p class="card-text">' + description + '</p><p>' + n_participants  + ' Participants | ' + n_listeners + ' Listeners</p>' + join_span + ' | ' + listen_span + '</div></div></a>';
                 $('#discourseCards').append(discourseCard);
             }
             
+            var public_discourses;
             socket.emit('getActiveDiscourses', null, function(err, res){
-                
-                 for(i = 0; i < res.length; i++){
-                    var received_title = res[i]['name'];
-                    var received_tags = res[i]['tags'];
-                    var received_description = res[i]['description'];
-                    var received_n_participants = res[i]['current_participants'];
-                    var received_n_listeners = res[i]['current_listeners'];
-                    var received_public_join = res[i]['public_join'];
-                    var received_public_listen = res[i]['public_listen'];
-                    var received_discourse_URL = 'https://discourse.fm/live/' + res[i]['UDI']; 
-                    $.fn.addDiscourseCard(received_title, received_tags, received_description, received_n_participants, received_n_listeners, received_public_join, received_public_listen, received_discourse_URL);
+                public_discourses = res;
+            });
+            
+            $('#find_public_discourses').click(function(){
+                for(i = 0; i < public_discourses.length; i++){
+                    var received_title = public_discourses[i]['name'];
+                    var received_tags = public_discourses[i]['tags'];
+                    var received_description = public_discourses[i]['description'];
+                    var received_n_participants = public_discourses[i]['current_participants'];
+                    var received_n_listeners = public_discourses[i]['current_listeners'];
+                    var received_public_join = public_discourses[i]['public_join'];
+                    var received_public_listen = public_discourses[i]['public_listen'];
+                    var received_discourse_UDI = public_discourses[i]['UDI']; 
+                    $.fn.addDiscourseCard(received_title, received_tags, received_description, received_n_participants, received_n_listeners, received_public_join, received_public_listen, received_discourse_UDI);
+                }
+                if(public_discourses.length == 0){
+                    $('#noPublicDiscourses').css({"display": "block"});
                 }
             });
             
@@ -432,17 +443,34 @@
   </head>
   <body>
     
+      
+    <nav class="navbar fixed-bottom navbar-light" style="background-color: #6c757d; float:none; display: inline-block; text-align: center;">
+        <a href="#" style="color:white" data-toggle="modal" data-target="#aboutModal">About</a>
+        <span style="color:white">&#183;</span>
+        <a href="#" style="color:white" data-toggle="modal" data-target="#FAQModal">FAQ</a>
+        <span style="color:white">&#183;</span>
+        <a href="#" style="color:white" data-toggle="modal" data-target="#contactModal">Contact</a>
+        <span style="color:white">&#183;</span>
+        <a href="#" style="color:white" data-toggle="modal" data-target="#upcomingFeaturesModal">Upcoming Features</a>
+        <br>
+        <span style="color:white">Made with <img src="icons/heart-fill-red.svg" /> in post-apocalyptic Covid-19 land</span>
+        <span style="color:white">&#183;</span>
+        <span style="color:white">&copy; 2020</span>
+    </nav>
+
+      
     <div class="container min-vh-100">
       <div class="row min-vh-100 justify-content-center align-items-center">
         <div class="column col-md-12"> <!-- class="text-center" -->
             <h1 class="display-3">Discourse.FM</h1> 
             <h3>Live, broadcasted audio chat rooms to <span id="textchanger">learn something new.</span></h3>
-            <h5>Listen to a public discourse below, or <span id="new_discourse" style="color:#28a745;cursor: pointer;" data-toggle="modal" data-target="#newDiscourseModal"> start a new discourse</span>.</h5>
+            <h5>
+                <span id="find_public_discourses" style="color:#007bff; cursor: pointer;">Find a public discourse</span>, or 
+                <span id="new_discourse" style="color:#28a745;cursor: pointer;" data-toggle="modal" data-target="#newDiscourseModal"> start a new one</span>.</h5>
             <br>
-            <div class="container h-75" style="background-color: white; overflow-x: auto;">
-                <div class="row flex-row flex-nowrap" id="discourseCards">
-                    
-                </div>
+            <p id="noPublicDiscourses" style="display:none">There are no public discourses to display right now - start a new discourse to get the conversation going!</p>
+            <div class="card-columns" id="discourseCards">
+
             </div>
         </div>
       </div>
@@ -505,6 +533,71 @@
           </div>
         </div>
       </div>
+    </div>
+      
+    <div class="modal fade" id="aboutModal" tabindex="-1" aria-labelledby="aboutModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <h3>About Discourse.FM</h3>
+                <p>Since ancient times, humans have relied on spoken language to collaborate, organize, and connect with one another. But in recent times, much of our meaningful dialogue has been locked away in written text on the internet - taking the form of email, social media posts, comment sections, and instant messages. And even when we do speak online, it's often controlled or moderated by one individual or organization. In many ways, we've lost our ability to simply speak with one another at all, causing unprecented political divide and a decline in social relationships.
+                <br><br>
+                Discourse.FM is meant to be the simplest decentralized conversation tool on the internet. We don't expect to fix the entirety of the above problem, but we want to provide a tool that can at least <i>get the conversation going</i> again. 
+                <br><br>    
+                To get started, simply create or join a discourse and let your voice be heard. Or to understand more of what you can do with Discourse.FM, head over to the <a href="#" data-toggle="modal" data-target="#FAQModal">FAQ</a> section. 
+                <br><br>
+                Discourse.FM was created by <a href="https://twitter.com/sethkimmel3">Seth Dylan Kimmel</a> and built on top of <a href="https://github.com/pion/">Pion</a> and <a href="https://github.com/MixinNetwork/kraken/">Kraken</a>.
+                </p>
+            </div>
+        </div>
+      </div> 
+    </div>  
+    
+    <div class="modal fade" id="FAQModal" tabindex="-1" aria-labelledby="FAQModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <h3>What is Discourse.FM?</h3>
+                <p>A platform for live, decentralized, broadcasted audio conferencing.</p>
+                <h3>What can I do with it?</h3>
+                <p>Quite a bit. Like a podcast, you can use it as a stage for dialogue. Like a radio station, you can use it to project a message to a wide audience. However discourses can be private, meaning they can be used for closed hangouts, meetings, and much more.</p>
+                <h3>What is the distinction between a public and private discourse?</h3>
+                <p>A discourse can be: </p>
+                    <ul>
+                    <li>public to join and listen to</li>
+                    <li>private to join, but public to listen to</li>
+                    <li>private to join and listen to</li>
+                    </ul>
+                <p>With these options it provides complete privacy if desired or a powerful stage to project ideas.</p>
+                <h3>What do you mean by "decentralized?"</h3>
+                <p>A discourse has no moderator. If there are multiple participants, no one person has the ability to mute or kick any one person for the rest of the group. This removes any power dynamic and creates a balance of power between all participants. It has nothing to do with blockchain technology if that's what you thought we meant (at least not yet).</p>
+                <h3>Is it free? Do I have to register?</h3>
+                <p>It is completely free. At the moment, no registration is required to participate in or listen to a discourse.</p>
+                <h3>Was this created in response to Covid-19? Or the current political climate?</h3>
+                <p>Sort of. The original idea was actually conceived in the Fall of 2019 as a way to combat boredness on a long commute. But when lockdown began it was clear this would be a great time to build it. It was made even clearer in the heat of the political turmoil later in the year. Now, more than ever, people need to be talking.</p>
+            </div>
+        </div>
+      </div> 
+    </div>
+      
+    <div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                For now, you can get in touch with any questions, comments, suggestions, or inquiries at <a href="mailto:seth.kimmel3@gmail.com">seth.kimmel3@gmail.com.</a>
+            </div>
+        </div>
+      </div> 
+    </div>
+      
+    <div class="modal fade" id="upcomingFeaturesModal" tabindex="-1" aria-labelledby="upcomingFeaturesLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                We've got a backlog of pretty cool features that we can't wait to share with you. If you'd like to stay updated on our progress, feel free to add your email below or follow us on Twitter.
+            </div>
+        </div>
+      </div> 
     </div>
   </body>
 </html>

@@ -16,15 +16,16 @@
   <style>
     
   </style>
-      <script src="../node_modules/socket.io-client/dist/socket.io.js"></script>
-      <script src="../Base64.js"></script>
-      <!--<script src="../krakenapi.js"></script>-->
-      <script src="../krakenclient.js"></script>
-      <script src="../roundtable.js"></script>
+      <script src="../socket.io-client/dist/socket.io.js"></script>
+      <script src="../js/Base64.js"></script>
+      <script src="../js/krakenclient.js"></script>
+      <script src="../js/roundtable.js"></script>
       <script>
         $( document ).ready(function() {
-            //var socket = io("http://127.0.0.1:3000");
-            var socket = io.connect("https://discourse.fm");
+            var socket = io.connect("http://127.0.0.1:3000");
+            //var socket = io.connect("https://discourse.fm");
+            //var socket = io.connect('/');
+            
             // Add a connect listener
             socket.on('connect',function() {
                console.log('Client has connected to the server!');
@@ -37,6 +38,23 @@
                });
             } 
             
+            function update_uname_history(UDI, uname){
+                // maintain a persistent log of past uname's to prevent "phantom" users in a discourse
+                var uname_history = localStorage.getItem(UDI + ':' + 'uname_history');
+                var uname_history_array;
+                if(!uname_history || uname_history == null){
+                    uname_history_array = [];
+                    uname_history_array.push(uname);
+                    localStorage.setItem(UDI + ':' + 'uname_history', JSON.stringify(uname_history_array));
+                }else{
+                    uname_history_array = JSON.parse(uname_history);
+                    if(uname_history_array.indexOf(uname) == -1){
+                        uname_history_array.push(uname);
+                        localStorage.setItem(UDI + ':' + 'uname_history', JSON.stringify(uname_history_array));
+                    } 
+                }
+            }
+            
             //get user id, or set if doesn't exist
             var user_id = localStorage.getItem('user_id');
             if (!user_id || user_id == "null" || user_id == null) { 
@@ -44,14 +62,16 @@
                localStorage.setItem('user_id', user_id);
             }
             
-            var pathSplit = location.pathname.split('/')
+            var pathSplit = location.pathname.split('/');
             var UDI = pathSplit[pathSplit.length - 1];
             
             var nickname = localStorage.getItem(UDI+':'+user_id);
             if(nickname != null){
                 var uname = user_id + ':' + Base64.encode(nickname);
                 var unameRPC = encodeURIComponent(uname);
+                update_uname_history(UDI, uname);
             }
+            
             
             $.fn.setNickName = function(){
                     nickname = $('#nickname-input').val(); 
@@ -74,6 +94,7 @@
                         localStorage.setItem(UDI+':'+user_id, nickname);
                         uname = user_id + ':' + Base64.encode(nickname);
                         unameRPC = encodeURIComponent(uname);
+                        update_uname_history(UDI, uname);
                         $('#nickNameModal').modal('hide');
                         $.fn.joinDiscourse();
                     }
@@ -119,6 +140,7 @@
                                 window.location.href = window.location.href.split("/live")[0];
                             }else if(data['join_auth'] == false && data['listen_auth'] == true){
                                 // send request to begin listening via LID secret (server will allow regardless if LID secret is not necessary)
+                                $.fn.listenToDiscourse();
                                 $.fn.populateDiscourseContent(data, 'listen');
                             }else if(data['join_auth'] == true && data['listen_auth'] == false){
                                 // this case should not really appear, but if so
@@ -128,6 +150,7 @@
                             }else if(data['join_auth'] == true && data['listen_auth'] == true){
                                 // send request to begin listening via LID secret (server will allow regardless if LID secret is not necessary)
                                 // send request to join discourse via JID secret (server will allow regardless if LID secret is not necessary)
+                                $.fn.listenToDiscourse();
                                 $.fn.populateDiscourseContent(data, 'join');
                             }
                         }
@@ -160,21 +183,56 @@
                 if(status != 'ended'){
                     $('discourse-end-time').html(' | Ended at: ' + data['end_datetime']);
                 }{
-                    var listen_button = document.createElement('button');
-                    listen_button.type = 'button';
-                    listen_button.className = 'btn btn-primary mr-1';
-                    listen_button.onclick = function(){ $.fn.listenToDiscourse() }; 
-                    listen_button.innerHTML = 'Listen to Discourse';
-                    document.getElementById('discourse-actions').appendChild(listen_button);
+//                    var listen_button = document.createElement('button');
+//                    listen_button.type = 'button';
+//                    listen_button.className = 'btn btn-primary mr-1';
+//                    listen_button.onclick = function(){ $.fn.listenToDiscourse() }; 
+//                    listen_button.innerHTML = 'Listen to Discourse';
+//                    document.getElementById('discourse-actions').appendChild(listen_button);
 
                     if(status == 'join'){
                         var join_button = document.createElement('button');
+                        join_button.id = 'join-button'
                         join_button.type = 'button';
                         join_button.className = 'btn btn-success';
-                        join_button.onclick = function(){ $.fn.joinDiscourse() }; 
-                        join_button.innerHTML = 'Join Discourse';
+                        join_button.onclick = function(){ $.fn.joinDiscourse(); }; 
+                        join_button.innerHTML = 'Join Discourse <img src="../icons/arrow-up-circle-white.svg" />';
                         document.getElementById('discourse-actions').appendChild(join_button);
                     }
+                }
+            }
+            
+            
+            $.fn.leaveDiscourse = function(){
+                $.fn.listenToDiscourse();
+                $.fn.removeSeat(user_id);
+                $('#micicon').css('display', 'none');
+                $('#micicon').attr("src", '../icons/mic.svg');
+                $('#micicon').data('muted', "unmuted");
+            }
+            
+            $.fn.toggleUserMute = function(){
+                toggle_user_muted();
+                if($('#micicon').data('muted') == "unmuted"){
+                    $('#micicon').attr("src", '../icons/mic-mute.svg');
+                    $('#micicon').data('muted', "muted");
+                }else{
+                    $('#micicon').attr("src", '../icons/mic.svg');
+                    $('#micicon').data('muted', "unmuted");
+                }
+            }
+            
+            $.fn.toggleJoinButton = function(){
+                if($('#join-button').hasClass('btn-success')){
+                    $('#join-button').removeClass('btn-success');
+                    $('#join-button').addClass('btn-danger');
+                    $('#join-button').html('Leave Discourse <img src="../icons/arrow-down-circle-white.svg" />');
+                    $('#join-button').attr('onclick', '$.fn.leaveDiscourse()');
+                }else{
+                    $('#join-button').removeClass('btn-danger');
+                    $('#join-button').addClass('btn-success');
+                    $('#join-button').html('Join Discourse <img src="../icons/arrow-up-circle-white.svg" />');
+                    $('#join-button').attr('onclick', '$.fn.joinDiscourse()');
                 }
             }
             
@@ -192,14 +250,18 @@
                          "connection_type": "join"
                      }
                      socket.emit('connectToDiscourse', connection_data, function(err, data){
-                         if(err == null){
-                             $.fn.updateListeners(data['current_listeners']);
-                         }
+//                         if(err == null){
+//                             $.fn.updateListeners(data['current_listeners']);
+//                         }
                      });
+                     $.fn.toggleJoinButton();
+                     $('#micicon').css('display', 'block');
                 }
             }
             
             $.fn.listenToDiscourse = function(){
+                    toggle_user_muted();
+                    stop_user_stream();
                     start_client('listen_only', UDI, '', '', socket);
                     register_listen_only_peer_client(UDI, socket); 
                     var connection_data = {
@@ -208,10 +270,11 @@
                          "connection_type": "listen"
                      }
                      socket.emit('connectToDiscourse', connection_data, function(err, data){
-                         if(err == null){
-                             $.fn.updateListeners(data['current_listeners']);
-                         }
+//                         if(err == null){
+//                             $.fn.updateListeners(data['current_listeners']);
+//                         }
                      });
+                    $.fn.toggleJoinButton();
             }
             
             socket.on('updateDiscourseCount', function(count_data, handler){
@@ -231,11 +294,22 @@
                 $.fn.updateListeners(current_listeners);
             });
             
+            socket.on('removeSeat', function(remove_seat_data, handler){
+                var id_to_remove = remove_seat_data['user_id'];
+                $.fn.removeSeat(id_to_remove);
+            });
+            
         });
             
       </script>
   </head>
   <body> 
+    
+    <a href="../" style="position:absolute;top:5px;left:5px;">
+        <img src="../icons/house.svg" style="height:35px;width:auto;"/>  
+    </a>
+      
+    <img src="../icons/mic.svg" id="micicon" style="height:35px;width:auto;position:absolute;bottom:5px;right:5px;display:none;cursor:pointer;" onclick="$.fn.toggleUserMute()" data-muted="unmuted"/>  
       
     <div class="modal fade" id="nickNameModal" tabindex="-1" aria-labelledby="nickNameModalLabel" aria-hidden="true">
       <div class="modal-dialog">
@@ -265,14 +339,10 @@
     <div class="container min-vh-100">
       <div class="row min-vh-100 justify-content-center align-items-center">
         <div class="column col-md-12 text-center"> <!-- class="text-center" -->
-            <h1 class="display-3" id="discourse-name">Discourse Name</h1> 
-            <h3 id="discourse-description">Description</h3>
-            <h4 id="discourse-tags">Tags</h4>
+            <h1 class="display-3" id="discourse-name"></h1> 
+            <h3 id="discourse-description"></h3>
+            <h4 id="discourse-tags"></h4>
             <div id="peers"></div>
-<!--
-            <h5>Began at: <span id="discourse-start-time"></span> <span id="discourse-end-time"></span></h5>
-            <h5><span id="discourse-participants"></span> Participants | <span id="discourse-listeners"> </span> Listeners</h5>
--->
             <canvas id="roundtable"></canvas>
             <div id="discourse-actions"></div>
             <br>
