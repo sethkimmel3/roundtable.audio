@@ -53,7 +53,12 @@ $( document ).ready(function() {
         ctx.fillStyle = 'black';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(listeners.toString() + ' Listeners', roundtable_width/2, roundtable_width/2);
+        if(listeners == 1){
+            var listeners_text = ' Listener';
+        }else{
+            var listeners_text = ' Listeners';
+        }
+        ctx.fillText('+' + listeners.toString() + listeners_text, roundtable_width/2, roundtable_width/2);
         ctx.textBaseline = 'middle';
 
         for(var i = 0; i < seats.length; i++){

@@ -22,8 +22,8 @@
       <script src="../js/roundtable.js"></script>
       <script>
         $( document ).ready(function() {
-            var socket = io.connect("http://127.0.0.1:3000");
-            //var socket = io.connect("https://discourse.fm");
+            //var socket = io.connect("http://127.0.0.1:3000");
+            var socket = io.connect("https://discourse.fm");
             //var socket = io.connect('/');
             
             // Add a connect listener
@@ -70,6 +70,55 @@
                 var uname = user_id + ':' + Base64.encode(nickname);
                 var unameRPC = encodeURIComponent(uname);
                 update_uname_history(UDI, uname);
+            }
+            
+            $.fn.copy_to_clipboard = function(text){
+                var el = document.createElement('textarea');
+                el.textContent = text;
+                document.body.appendChild(el);
+                
+                var selection = document.getSelection();
+                var range = document.createRange();
+                
+                range.selectNode(el);
+                selection.removeAllRanges();
+                selection.addRange(range);
+                
+                console.log('copy success', document.execCommand('copy'));
+                selection.removeAllRanges();
+                
+                document.body.removeChild(el);
+            }
+            
+            var UDI_link;
+            var join_link;
+            var listen_link;
+            
+            $.fn.copy_UDI_link = function(){
+                $.fn.copy_to_clipboard(UDI_link);
+                $('#copy-UDI-link-button').tooltip({title: 'Copied!'});
+                $('#copy-UDI-link-button').tooltip('show');
+                setTimeout(function(){
+                    $('#copy-UDI-link-button').tooltip('dispose');
+                }, 1000);
+            }
+            
+            $.fn.copy_join_link = function(){
+                $.fn.copy_to_clipboard(join_link);
+                $('#copy-join-link-button').tooltip({title: 'Copied!'});
+                $('#copy-join-link-button').tooltip('show');
+                setTimeout(function(){
+                    $('#copy-join-link-button').tooltip('dispose');
+                }, 1000);
+            }
+            
+            $.fn.copy_listen_link = function(){
+                $.fn.copy_to_clipboard(listen_link);
+                $('#copy-listen-link-button').tooltip({title: 'Copied!'});
+                $('#copy-listen-link-button').tooltip('show');
+                setTimeout(function(){
+                    $('#copy-listen-link-button').tooltip('dispose');
+                }, 1000);
             }
             
             
@@ -141,6 +190,7 @@
                             }else if(data['join_auth'] == false && data['listen_auth'] == true){
                                 // send request to begin listening via LID secret (server will allow regardless if LID secret is not necessary)
                                 $.fn.listenToDiscourse();
+                                $.fn.populateShareLinks(data, 'listen');
                                 $.fn.populateDiscourseContent(data, 'listen');
                             }else if(data['join_auth'] == true && data['listen_auth'] == false){
                                 // this case should not really appear, but if so
@@ -151,6 +201,7 @@
                                 // send request to begin listening via LID secret (server will allow regardless if LID secret is not necessary)
                                 // send request to join discourse via JID secret (server will allow regardless if LID secret is not necessary)
                                 $.fn.listenToDiscourse();
+                                $.fn.populateShareLinks(data, 'join');
                                 $.fn.populateDiscourseContent(data, 'join');
                             }
                         }
@@ -179,29 +230,72 @@
                 $('#discourse-listeners').html(data['current_listeners']);
                 $.fn.updateListeners(data['current_listeners']);
                 
-                // user would have been redirected if not at least allowed to listen
-                if(status != 'ended'){
+                if(status == 'ended'){
                     $('discourse-end-time').html(' | Ended at: ' + data['end_datetime']);
-                }{
+                }
+                if(status == 'join'){
+                    var join_button = document.createElement('button');
+                    join_button.id = 'join-button'
+                    join_button.type = 'button';
+                    join_button.className = 'btn btn-success';
+                    join_button.onclick = function(){ $.fn.joinDiscourse(); }; 
+                    join_button.innerHTML = 'Join Discourse <img src="../icons/arrow-up-circle-white.svg" />';
+                    document.getElementById('discourse-actions').appendChild(join_button);
+                }
 //                    var listen_button = document.createElement('button');
 //                    listen_button.type = 'button';
 //                    listen_button.className = 'btn btn-primary mr-1';
 //                    listen_button.onclick = function(){ $.fn.listenToDiscourse() }; 
 //                    listen_button.innerHTML = 'Listen to Discourse';
 //                    document.getElementById('discourse-actions').appendChild(listen_button);
-
-                    if(status == 'join'){
-                        var join_button = document.createElement('button');
-                        join_button.id = 'join-button'
-                        join_button.type = 'button';
-                        join_button.className = 'btn btn-success';
-                        join_button.onclick = function(){ $.fn.joinDiscourse(); }; 
-                        join_button.innerHTML = 'Join Discourse <img src="../icons/arrow-up-circle-white.svg" />';
-                        document.getElementById('discourse-actions').appendChild(join_button);
-                    }
-                }
+                
             }
             
+            $.fn.populateShareLinks = function(data, status){
+                var public_listen = data['public_listen'];
+                var public_join = data['public_join'];
+                var show_URL = false;
+                var show_listen = false;
+                var show_join = false;
+                if(public_join == false && public_listen == false){
+                    if(status == 'join'){
+                        $('#discourseShareStatus').html("This discourse is private join/private listen. Send one of the links below to allow others to listen or participate.");
+                        show_listen = true;
+                        show_join = true;
+                    }else if(status == 'listen'){
+                        $('#discourseShareStatus').html("This discourse is private join/private listen. Send the link below to allow others to listen.");
+                        show_listen = true;
+                    }
+                }else if(public_join == false && public_listen == true){
+                    if(status == 'join'){
+                        $('#discourseShareStatus').html("This discourse is private join/public listen. Send the discourse URL to allow others to listen or the join link to allow others to participate.");
+                        show_URL = true;
+                        show_join = true;
+                    }else if(status == 'listen'){
+                        $('#discourseShareStatus').html("This discourse is private join/public listen. Send the discourse URL to allow others to listen.");
+                        show_URL = true;
+                    }
+                }else if(public_join == true && public_listen == true){
+                    $('#discourseShareStatus').html("This discourse is public join/public listen. Send the discourse URL to allow others to listen or participate.");
+                    show_URL = true;
+                }
+                
+                if(show_URL){
+                    UDI_link = 'https://www.discourse.fm/live/' + UDI;
+                    $('#UDI-link-label').html(UDI_link);
+                    $('#UDI-link').css('display', 'block');
+                }
+                if(show_listen){
+                    listen_link = 'https://www.discourse.fm/lid=' + LID;
+                    $('#listen-link-label').html(listen_link);
+                    $('#listen-link').css('display', 'block');
+                }
+                if(show_join){
+                    join_link = 'https://www.discourse.fm/jid=' + JID;
+                    $('#join-link-label').html(join_link);
+                    $('#join-link').css('display', 'block');
+                }
+            }
             
             $.fn.leaveDiscourse = function(){
                 $.fn.listenToDiscourse();
@@ -309,6 +403,10 @@
         <img src="../icons/house.svg" style="height:35px;width:auto;"/>  
     </a>
       
+    <a href="../" style="position:absolute;top:5px;right:5px;" data-toggle="modal" data-target="#shareModal">
+        <img src="../icons/share.svg" style="height:35px;width:auto;"/>  
+    </a>
+      
     <img src="../icons/mic.svg" id="micicon" style="height:35px;width:auto;position:absolute;bottom:5px;right:5px;display:none;cursor:pointer;" onclick="$.fn.toggleUserMute()" data-muted="unmuted"/>  
       
     <div class="modal fade" id="nickNameModal" tabindex="-1" aria-labelledby="nickNameModalLabel" aria-hidden="true">
@@ -335,6 +433,19 @@
         </div>
       </div>
     </div>
+      
+    <div class="modal fade" id="shareModal" tabindex="-1" aria-labelledby="shareModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+           <div class="modal-body">
+               <h4 id="discourseShareStatus"></h4>
+                <label id="UDI-link" style="display: none;">Link to Discourse: <br><div class="container" style="background-color:rgba(0,0,0,0.025);"><span class="private-links mr-3" id="UDI-link-label" style="font-size:10.5px;"></span><button type="button" id="copy-UDI-link-button" class="btn btn-sm" onclick="$.fn.copy_UDI_link()"><img src="../icons/clipboard-plus.svg" alt="" width="15" height="15" title="Bootstrap"></button></div></label>
+                <label id="join-link" style="display: none;">Join Link: <br><div class="container" style="background-color:rgba(0,0,0,0.025);"><span class="private-links mr-3" id="join-link-label" style="font-size:10.5px;"></span><button type="button" id="copy-join-link-button" class="btn btn-sm" onclick="$.fn.copy_join_link()"><img src="../icons/clipboard-plus.svg" alt="" width="15" height="15" title="Bootstrap"></button></div></label>
+                <label id="listen-link" style="display: none;">Listen Link: <br><div class="container" style="background-color:rgba(0,0,0,0.025);"><span class="private-links mr-3" id="listen-link-label" style="font-size:10.5px;"></span><button type="button" id="copy-listen-link-button" class="btn btn-sm" onclick="$.fn.copy_listen_link()"><img src="../icons/clipboard-plus.svg" alt="" width="15" height="15" title="Bootstrap"></button></div></label>
+           </div>
+        </div>
+      </div> 
+    </div>  
     
     <div class="container min-vh-100">
       <div class="row min-vh-100 justify-content-center align-items-center">

@@ -54,11 +54,12 @@
           width: auto;
         }
   </style>
+      
       <script src="socket.io-client/dist/socket.io.js"></script>
       <script>
         $( document ).ready(function() {
-            var socket = io.connect("http://127.0.0.1:3000");
-            //var socket = io.connect("https://discourse.fm");
+            //var socket = io.connect("http://127.0.0.1:3000");
+            var socket = io.connect("https://discourse.fm");
             //var socket = io.connect("/");
   
             // Add a connect listener
@@ -437,6 +438,10 @@
                 }
             });
             
+            $.fn.closeModalOpenModal = function(closeModal, openModal){
+                $(closeModal).modal("hide");
+                $(openModal).modal("show");
+            }
         });
             
       </script>
@@ -449,20 +454,22 @@
         <span style="color:white">&#183;</span>
         <a href="#" style="color:white" data-toggle="modal" data-target="#FAQModal">FAQ</a>
         <span style="color:white">&#183;</span>
+        <a href="#" style="color:white" data-toggle="modal" data-target="#philosophyModal">Philosophy</a>
+        <span style="color:white">&#183;</span>
         <a href="#" style="color:white" data-toggle="modal" data-target="#contactModal">Contact</a>
         <span style="color:white">&#183;</span>
-        <a href="#" style="color:white" data-toggle="modal" data-target="#upcomingFeaturesModal">Upcoming Features</a>
+        <a href="#" style="color:white" data-toggle="modal" data-target="#upcomingModal">Upcoming</a>
         <br>
         <span style="color:white">Made with <img src="icons/heart-fill-red.svg" /> in post-apocalyptic Covid-19 land</span>
         <span style="color:white">&#183;</span>
         <span style="color:white">&copy; 2020</span>
     </nav>
-
       
     <div class="container min-vh-100">
       <div class="row min-vh-100 justify-content-center align-items-center">
         <div class="column col-md-12"> <!-- class="text-center" -->
-            <h1 class="display-3">Discourse.FM</h1> 
+            <h1 class="display-3">D<img src="icons/radio_wireless_tower.svg" style="height:45px;"/>scourse.FM</h1>
+            
             <h3>Live, broadcasted audio chat rooms to <span id="textchanger">learn something new.</span></h3>
             <h5>
                 <span id="find_public_discourses" style="color:#007bff; cursor: pointer;">Find a public discourse</span>, or 
@@ -544,9 +551,9 @@
                 <br><br>
                 Discourse.FM is meant to be the simplest decentralized conversation tool on the internet. We don't expect to fix the entirety of the above problem, but we want to provide a tool that can at least <i>get the conversation going</i> again. 
                 <br><br>    
-                To get started, simply create or join a discourse and let your voice be heard. Or to understand more of what you can do with Discourse.FM, head over to the <a href="#" data-toggle="modal" data-target="#FAQModal">FAQ</a> section. 
+                To get started, simply create or join a discourse and let your voice be heard. Or to understand more of what you can do with Discourse.FM, head over to the <a onclick="$.fn.closeModalOpenModal('#aboutModal', '#FAQModal');" href="#">FAQ</a> section. 
                 <br><br>
-                Discourse.FM was created by <a href="https://twitter.com/sethkimmel3">Seth Dylan Kimmel</a> and built on top of <a href="https://github.com/pion/">Pion</a> and <a href="https://github.com/MixinNetwork/kraken/">Kraken</a>.
+                Discourse.FM is a blend of Node, Golang, and native Javascript. It was built on top of <a href="https://github.com/pion/">Pion</a> and <a href="https://github.com/MixinNetwork/kraken/">Kraken</a> - special thanks to these open-source projects/communities.
                 </p>
             </div>
         </div>
@@ -573,6 +580,10 @@
                 <p>A discourse has no moderator. If there are multiple participants, no one person has the ability to mute or kick any one person for the rest of the group. This removes any power dynamic and creates a balance of power between all participants. It has nothing to do with blockchain technology if that's what you thought we meant (at least not yet).</p>
                 <h3>Is it free? Do I have to register?</h3>
                 <p>It is completely free. At the moment, no registration is required to participate in or listen to a discourse.</p>
+                <h3>Are discourses stored? Can I listen to one after it ends?</h3>
+                <p>No. Discourses are live-only, meaning that once a conversation is over, it's over. We believe this takes the pressure off of folks who are eager to share ideas and opinions but afraid of "going-on record." Of course, we cannot stop people from attempting to record the audio through alternative means, so be wary of this.</p>
+                <h3>Are discourses monitored? Am I being listened to by the creators of discourse.fm in a private discourse?</h3>
+                <p>No and no. We are placing trust in you to use discourse.fm with respect, and to follow the community standards/guidlines found in the <a onclick="$.fn.closeModalOpenModal('#FAQModal', '#philosophyModal');" href="#">Philosophy</a> section.</p> 
                 <h3>Was this created in response to Covid-19? Or the current political climate?</h3>
                 <p>Sort of. The original idea was actually conceived in the Fall of 2019 as a way to combat boredness on a long commute. But when lockdown began it was clear this would be a great time to build it. It was made even clearer in the heat of the political turmoil later in the year. Now, more than ever, people need to be talking.</p>
             </div>
@@ -580,21 +591,41 @@
       </div> 
     </div>
       
+    <div class="modal fade" id="philosophyModal" tabindex="-1" aria-labelledby="contactLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                Discourse.fm is meant to be a welcoming environment. People should be able to speak freely and share their opinions, learn new things, and enjoy the company of others. Discourses are not recorded or stored, which removes some of the pressure often associated with written text in online forums. Additionally, the decentralized nature of a discourse - having no moderator - should allow for more free-form discussion without fear of being shut-down. We think these two elements will empower healthy discourse and fun conversations. However, with this power, autonomy, and anonymity, we require community buy-in and respect to make it work.
+                <br><br>
+                We therefore ask you to do your part and follow some guidelines:
+                <ul>
+                    <li>You may <b>never create discourses which are meant to threaten, disparage, or target individuals or groups</b>. We ask that if you see such a case, please report it to <a href="mailto:info@discourse.fm">info@discourse.fm</a>.</li>
+                    <li>When in a discourse,<b> hate speech is not tolerated in any way, shape or form</b>. We ask that if you are in a discourse where such speech is occurring to leave the discourse and encourage others to do so. If you'd like to keep the conversation going, create a new private discourse without that participant. We think this is a healthier way to discourage this type of behavior without giving centralized power to a moderator.</li>
+                    <li>Give others the chance to be heard if there is more than one participant. Everyone who has a seat at the table should feel encouraged and included to be a part of the discussion.</li>
+                </ul>
+                If you do your part, we'll do ours. We want to continue to improve the experience of the community and introduce features that empower and encourage meaningful, respectful dialogue. If you have any ideas for improving community standards, we're all ears at <a href="mailto:info@discourse.fm">info@discourse.fm</a>. 
+                <br><br>
+                <b>Disclaimer:</b> Discourse.fm does not take any legal responsibility for what is said while using the service, or any outcomes directly or indirectly relating to the conversations while using the service.
+            </div>
+        </div>
+      </div> 
+    </div>  
+    
     <div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-body">
-                For now, you can get in touch with any questions, comments, suggestions, or inquiries at <a href="mailto:seth.kimmel3@gmail.com">seth.kimmel3@gmail.com.</a>
+                For now, you can get in touch with any questions, comments, suggestions, or inquiries at <a href="mailto:info@discourse.fm">info@discourse.fm.</a>
             </div>
         </div>
       </div> 
     </div>
       
-    <div class="modal fade" id="upcomingFeaturesModal" tabindex="-1" aria-labelledby="upcomingFeaturesLabel" aria-hidden="true">
+    <div class="modal fade" id="upcomingModal" tabindex="-1" aria-labelledby="upcomingLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-body">
-                We've got a backlog of pretty cool features that we can't wait to share with you. If you'd like to stay updated on our progress, feel free to add your email below or follow us on Twitter.
+                We've got big plans for discourse.fm. If you'd like to stay updated on our progress, <!--feel free to add your email below or follow us on Twitter.--> check back in here occasionally. We'll also be opening some more channels for communication very soon. 
             </div>
         </div>
       </div> 

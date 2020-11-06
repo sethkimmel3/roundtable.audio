@@ -400,6 +400,8 @@ io.on('connection', (socket) => {
                        "tags": res[0]['tags'],
                        "join_auth": join_auth,
                        "listen_auth": listen_auth,
+                       "public_join": res[0]['public_join'],
+                       "public_listen": res[0]['public_listen'],
                        "start_datetime": res[0]['start_datetime'],
                        "end_datetime": res[0]['end_datetime'],
                        "current_participants": res[0]['current_participants'],
@@ -480,6 +482,10 @@ io.on('connection', (socket) => {
                                 'current_participants': current_participants
                             }
                             io.sockets.in(res[0]['RID']).emit('updateDiscourseCount', count_data); 
+                            var remove_seat_data = {
+                                'user_id': user_id
+                            }
+                            io.sockets.in(auth_creds[UDI]['RID']).emit('removeSeat', remove_seat_data);
                             handler(null, count_data);
                         }
                     }else{ 
@@ -654,4 +660,4 @@ hostname = 'localhost';
 
 http.listen(port, hostname, () => {
     console.log('listening on *:3000');
-}); 
+});
