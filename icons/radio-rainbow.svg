@@ -1,5 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg fill-rule="evenodd" viewBox="0 0 23000 27000" version="1.1" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 23000 27000" fill-rule="evenodd" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient gradientUnits="userSpaceOnUse" x1="11129" y1="8596" x2="11129" y2="8638" id="gradient-0">
+      <stop offset="0" style="stop-color: rgba(0, 0, 0, 1)"/>
+      <stop offset="1" style="stop-color: rgba(0, 0, 0, 1)"/>
+    </linearGradient>
+    <linearGradient gradientUnits="userSpaceOnUse" x1="11129" y1="8638" x2="11129" y2="8781" id="gradient-1">
+      <stop offset="0" style="stop-color: rgba(0, 0, 0, 1)"/>
+      <stop offset="1" style="stop-color: rgba(0, 0, 0, 1)"/>
+    </linearGradient>
+    <linearGradient gradientUnits="userSpaceOnUse" x1="11128.5" y1="8775" x2="11128.5" y2="8972" id="gradient-2">
+      <stop offset="0" style="stop-color: rgba(0, 0, 0, 1)"/>
+      <stop offset="1" style="stop-color: rgba(0, 0, 0, 1)"/>
+    </linearGradient>
+    <linearGradient gradientUnits="userSpaceOnUse" x1="11130" y1="8972" x2="11130" y2="9448" id="gradient-3">
+      <stop offset="0" style="stop-color: rgba(0, 0, 0, 1)"/>
+      <stop offset="1" style="stop-color: rgba(0, 0, 0, 1)"/>
+    </linearGradient>
+    <linearGradient gradientUnits="userSpaceOnUse" x1="11141.5" y1="9427" x2="11141.5" y2="10074" id="gradient-4">
+      <stop offset="0" style="stop-color: rgba(0, 0, 0, 1)"/>
+      <stop offset="1" style="stop-color: rgba(0, 0, 0, 1)"/>
+    </linearGradient>
+    <linearGradient gradientUnits="userSpaceOnUse" x1="11209.5" y1="10025" x2="11209.5" y2="11712" id="gradient-5">
+      <stop offset="0" style="stop-color: rgba(0, 0, 0, 1)"/>
+      <stop offset="1" style="stop-color: rgba(0, 0, 0, 1)"/>
+    </linearGradient>
+    <linearGradient gradientUnits="userSpaceOnUse" x1="11675" y1="11594" x2="11675" y2="16134" id="gradient-6">
+      <stop offset="0" style="stop-color: rgba(0, 0, 0, 1)"/>
+      <stop offset="1" style="stop-color: rgba(0, 0, 0, 1)"/>
+    </linearGradient>
+    <linearGradient gradientUnits="userSpaceOnUse" x1="13126" y1="15828" x2="13126" y2="21324" id="gradient-7">
+      <stop offset="0" style="stop-color: rgba(0, 0, 0, 1)"/>
+      <stop offset="1" style="stop-color: rgba(0, 0, 0, 1)"/>
+    </linearGradient>
+    <linearGradient gradientUnits="userSpaceOnUse" x1="16147" y1="20760" x2="16147" y2="26345" id="gradient-8">
+      <stop offset="0" style="stop-color: rgba(0, 0, 0, 1)"/>
+      <stop offset="1" style="stop-color: rgba(0, 0, 0, 1)"/>
+    </linearGradient>
+  </defs>
   <g id="Default">
     <desc>Master slide</desc>
     <g fill="none">
@@ -8,28 +46,6 @@
   </g>
   <g id="page1">
     <desc>Slide</desc>
-    <g>
-      <desc>Drawing</desc>
-      <path d="m12997 8810v2h-186v-2h186z" style=""/>
-      <path d="m12997 8813l-93-1h93v1z" style=""/>
-      <path d="m12997 8813c-4 246-57 481-150 693l-85-37-85-37c83-191 130-401 134-621l93 1 93 1z" style=""/>
-      <path d="m12847 9506c-93 213-225 405-388 566l-66-67-65-66c146-144 265-316 349-507l85 37 85 37z" style=""/>
-      <path d="m12459 10072c-163 160-357 290-571 380l-36-85-36-86c192-81 366-198 512-342l65 66 66 67z" style=""/>
-      <path d="m11888 10452c-215 90-450 140-697 140v-186c222 0 433-45 625-125l36 86 36 85z" style=""/>
-      <path d="m11191 10592c-249 0-486-51-702-142l36-86 36-85c194 82 407 127 630 127v186z" style=""/>
-      <path d="m10489 10450c-216-91-411-224-574-387l66-66 65-65c147 146 321 265 515 347l-36 85-36 86z" style=""/>
-      <path d="m9915 10063c-163-163-296-358-387-574l86-36 85-36c82 193 201 368 347 515l-65 65-66 66z" style=""/>
-      <path d="m9528 9489c-91-216-142-454-142-703h186c0 224 45 437 127 631l-85 36-86 36z" style=""/>
-      <path d="m9386 8786c0-249 51-487 142-703l86 36 85 37c-82 193-127 406-127 630h-186z" style=""/>
-      <path d="m9528 8083c91-216 224-410 387-574l66 66 65 66c-146 146-265 321-347 515l-85-37-86-36z" style=""/>
-      <path d="m9915 7509c163-163 358-295 574-386l36 85 36 86c-194 82-368 201-515 347l-65-66-66-66z" style=""/>
-      <path d="m10489 7123c216-91 453-142 702-142v186c-223 0-436 45-630 127l-36-86-36-85z" style=""/>
-      <path d="m11191 6981c249 0 487 51 703 142l-37 86-36 85c-194-82-407-127-630-127v-186z" style=""/>
-      <path d="m11894 7123c216 91 410 224 574 387l-66 66-66 65c-147-146-321-265-515-347l36-85 37-86z" style=""/>
-      <path d="m12468 7510c163 163 295 358 387 574l-86 36-85 36c-82-194-201-368-348-515l66-65 66-66z" style=""/>
-      <path d="m12855 8084c91 216 142 453 142 702h-186c0-223-45-436-127-630l85-36 86-36z" style=""/>
-      <path d="M 12997 8786 L 12997 8810 L 12811 8810 L 12811 8786 L 12997 8786 Z" style=""/>
-    </g>
     <g>
       <desc>Drawing</desc>
       <path d="m6108 23075h9572v903h-9572v-903z"/>
@@ -76,15 +92,15 @@
     </g>
     <g>
       <desc>Drawing</desc>
-      <path d="m11693 8596v42h-1128v-42h1128z" style="stroke-linecap: round; stroke: rgb(186, 218, 85);"/>
-      <path d="m11693 8638v143l-564-3-564-3v-137h1128z" style="stroke-linecap: round; stroke: rgb(186, 218, 85);"/>
-      <path d="m11693 8781c-1 55-1 119-1 191h-1128c0-74 0-140 1-197l564 3 564 3z" style="stroke-linecap: round; stroke: rgb(186, 218, 85);"/>
-      <path d="m11692 8972c0 127 1 279 4 455l-564 11-564 10c-3-184-4-343-4-476h1128z" style="stroke-linecap: round; stroke: rgb(186, 218, 85);"/>
-      <path d="m11696 9427c3 177 9 377 19 598l-564 24-563 25c-10-232-16-441-20-626l564-10 564-11z" style="stroke-linecap: round; stroke: rgb(186, 218, 85);"/>
-      <path d="m11715 10025c19 443 54 972 116 1569l-560 59-561 59c-66-623-102-1175-122-1638l563-25 564-24z" style="stroke-linecap: round; stroke: rgb(186, 218, 85);"/>
-      <path d="m11831 11594c126 1192 363 2653 809 4234l-542 153-543 153c-466-1651-714-3177-845-4422l561-59 560-59z" style="stroke-linecap: round; stroke: rgb(186, 218, 85);"/>
-      <path d="m12640 15828c445 1574 1098 3268 2057 4932l-488 282-489 282c-1009-1751-1697-3533-2165-5190l543-153 542-153z" style="stroke-linecap: round; stroke: rgb(186, 218, 85);"/>
-      <path d="m14697 20760c956 1657 2215 3285 3877 4735l-371 425-371 425c-1762-1538-3099-3264-4112-5021l489-282 488-282z" style="stroke-linecap: round; stroke: rgb(186, 218, 85);"/>
+      <path d="m11693 8596v42h-1128v-42h1128z" style="stroke-linecap: round; stroke: rgb(186, 218, 85); fill: url(#gradient-0);"/>
+      <path d="m11693 8638v143l-564-3-564-3v-137h1128z" style="stroke-linecap: round; stroke: rgb(186, 218, 85); fill: url(#gradient-1);"/>
+      <path d="m11693 8781c-1 55-1 119-1 191h-1128c0-74 0-140 1-197l564 3 564 3z" style="stroke-linecap: round; stroke: rgb(186, 218, 85); fill: url(#gradient-2);"/>
+      <path d="m11692 8972c0 127 1 279 4 455l-564 11-564 10c-3-184-4-343-4-476h1128z" style="stroke-linecap: round; stroke: rgb(186, 218, 85); fill: url(#gradient-3);"/>
+      <path d="m11696 9427c3 177 9 377 19 598l-564 24-563 25c-10-232-16-441-20-626l564-10 564-11z" style="stroke-linecap: round; stroke: rgb(186, 218, 85); fill: url(#gradient-4);"/>
+      <path d="m11715 10025c19 443 54 972 116 1569l-560 59-561 59c-66-623-102-1175-122-1638l563-25 564-24z" style="stroke-linecap: round; stroke: rgb(186, 218, 85); fill: url(#gradient-5);"/>
+      <path d="m11831 11594c126 1192 363 2653 809 4234l-542 153-543 153c-466-1651-714-3177-845-4422l561-59 560-59z" style="stroke-linecap: round; stroke: rgb(186, 218, 85); fill: url(#gradient-6);"/>
+      <path d="m12640 15828c445 1574 1098 3268 2057 4932l-488 282-489 282c-1009-1751-1697-3533-2165-5190l543-153 542-153z" style="stroke-linecap: round; stroke: rgb(186, 218, 85); fill: url(#gradient-7);"/>
+      <path d="m14697 20760c956 1657 2215 3285 3877 4735l-371 425-371 425c-1762-1538-3099-3264-4112-5021l489-282 488-282z" style="stroke-linecap: round; stroke: rgb(186, 218, 85); fill: url(#gradient-8);"/>
     </g>
     <g>
       <desc>Drawing</desc>

@@ -7,12 +7,13 @@
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <link rel="shortcut icon" href="favicon.ico">
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
-    <title>Discourse.FM</title>
+    <title>Discourse.fm</title>
   <style>
         .card {
           position: relative;
@@ -54,8 +55,8 @@
           width: auto;
         }
   </style>
-      
-      <script src="socket.io-client/dist/socket.io.js"></script>
+      <script src="js/socket.io-client/dist/socket.io.js"></script>
+      <script src="js/browser-mobile-check.js"></script>
       <script>
         $( document ).ready(function() {
             //var socket = io.connect("http://127.0.0.1:3000");
@@ -66,6 +67,13 @@
             socket.on('connect',function() {
                console.log('Client has connected to the server!');
             });
+            
+            var isMobile = $.fn.mobileAndTabletCheck();
+            var isCompatibleBrowser = $.fn.browserCheck();
+            
+            if(isMobile == true || isCompatibleBrowser == false){
+                $('#deviceBrowserAlertContainer').html('<div id="deviceBrowserAlert" class="alert alert-warning alert-dismissible fade show" role="alert"> <strong>Hold up!</strong> It looks like you may be using an incompatible device or browser. For best results, we recommend using Discourse.fm on Chrome desktop for now. <button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">&times;</span></button></div>');
+            }
             
             //handle jid, lid param requests
             function getUrlParam(name) {
@@ -82,7 +90,6 @@
                 //get JID_secret, LID, and LID_secret
                 socket.emit('get_auth_creds_from_jid', auth_jid, function(err, data){
                    if(err != 'error'){
-                       console.log(data);
                         var data_to_store = {
                             "JID": data['JID'],
                             "JID_secret": data['JID_secret'],
@@ -90,7 +97,7 @@
                             "LID_secret": data['LID_secret']
                         }
                         localStorage.setItem(data['UDI'], JSON.stringify(data_to_store));
-                        //window.location.href = window.location.href + 'live/' + data['UDI'];
+                        window.location.href = 'https://www.discourse.fm/live/' + data['UDI'];
                    }else{
                        console.log(err);
                    }
@@ -101,7 +108,6 @@
                 //get LID, and LID_secret
                 socket.emit('get_auth_creds_from_lid', auth_lid, function(err, data){
                    if(err != 'error'){
-                       console.log(data);
                        var data_to_store = {
                             "JID": null,
                             "JID_secret": null,
@@ -109,7 +115,7 @@
                             "LID_secret": data['LID_secret']
                         }
                         localStorage.setItem(data['UDI'], JSON.stringify(data_to_store));
-                        //window.location.href = window.location.href + 'live/' + data['UDI'];
+                        window.location.href = 'https://www.discourse.fm/live/' + data['UDI'];
                    }else{
                        console.log(err);
                    }
@@ -123,7 +129,7 @@
                          'host an interview.',
                          'catch up with friends.',
                          'meet new people.',
-                         'start a podcast.',
+                         'start a live podcast.',
                          'find inspiration.',
                          'bridge the divide.',
                          'promote your brand.',
@@ -200,8 +206,8 @@
             $('#new_discourse').click(function(){
                 join_id = uuidv4();
                 listen_id = uuidv4();
-                join_link = 'https://www.discourse.fm/jid=' + join_id;
-                listen_link = 'https://www.discourse.fm/lid=' + listen_id;
+                join_link = 'https://www.discourse.fm/?jid=' + join_id;
+                listen_link = 'https://www.discourse.fm/?lid=' + listen_id;
                 $('#join-link-label').html(join_link);
                 $('#listen-link-label').html(listen_link);
             });
@@ -431,7 +437,7 @@
                                     "LID_secret": data['LID_secret']
                                 }
                                 localStorage.setItem(data['UDI'], JSON.stringify(data_to_store));
-                                window.location.href = window.location.href + 'live/' + data['UDI'];
+                                window.location.href = 'https://www.discourse.fm/live/' + data['UDI'];
                             }
                         });
                     }
@@ -447,7 +453,8 @@
       </script>
   </head>
   <body>
-    
+      
+    <div id="deviceBrowserAlertContainer" style="position:absolute;width:100%;"></div>
       
     <nav class="navbar fixed-bottom navbar-light" style="background-color: #6c757d; float:none; display: inline-block; text-align: center;">
         <a href="#" style="color:white" data-toggle="modal" data-target="#aboutModal">About</a>
@@ -468,7 +475,7 @@
     <div class="container min-vh-100">
       <div class="row min-vh-100 justify-content-center align-items-center">
         <div class="column col-md-12"> <!-- class="text-center" -->
-            <h1 class="display-3">D<img src="icons/radio_wireless_tower.svg" style="height:45px;"/>scourse.FM</h1>
+            <h1 class="display-3">D<img src="icons/radio-rainbow-with-circle.svg" style="height:50px;position: relative;top:2px;vertical-align: baseline;" />scourse.fm</h1>
             
             <h3>Live, broadcasted audio chat rooms to <span id="textchanger">learn something new.</span></h3>
             <h5>
@@ -522,7 +529,7 @@
                  <input type="radio" name="options" id="private-join" style="display:none;"> Private to Join as a Participant 
                 </label>
               </div>
-              <label id="join-link" style="display: none;">Private Joining Link (save this!): <br><div class="container" style="background-color:rgba(0,0,0,0.025);"><span class="private-links mr-3" id="join-link-label" style="font-size:10.5px;"></span><button type="button" id="copy-join-link-button" class="btn btn-sm" onclick="$.fn.copy_join_link()"><img src="icons/clipboard-plus.svg" alt="" width="15" height="15" title="Bootstrap"></button></div></label>
+              <label id="join-link" style="display: none;">Private Joining Link: <br><div class="container" style="background-color:rgba(0,0,0,0.025);"><span class="private-links mr-3" id="join-link-label" style="font-size:10.5px;"></span><button type="button" id="copy-join-link-button" class="btn btn-sm" onclick="$.fn.copy_join_link()"><img src="icons/clipboard-plus.svg" alt="" width="15" height="15" title="Bootstrap"></button></div></label>
                 <div class="btn-group" data-toggle="buttons">
                 <label id="public-listen" class="btn btn-primary">
                  <input type="radio" name="options" id="public-listen" style="display:none;"> Public to Join as a Listener
@@ -531,7 +538,7 @@
                  <input type="radio" name="options" id="private-listen" style="display:none;"> Private to Join as a Listener 
                 </label>
               </div>
-              <label id="listen-link" style="display: none;">Private Listening Link (save this!): <br><div class="container" style="background-color:rgba(0,0,0,0.025);"><span class="private-links mr-3" id="listen-link-label" style="font-size:10.5px;"></span><button type="button" id="copy-listen-link-button" class="btn btn-sm" onclick="$.fn.copy_listen_link()"><img src="icons/clipboard-plus.svg" alt="" width="15" height="15" title="Bootstrap"></button></div></label>
+              <label id="listen-link" style="display: none;">Private Listening Link: <br><div class="container" style="background-color:rgba(0,0,0,0.025);"><span class="private-links mr-3" id="listen-link-label" style="font-size:10.5px;"></span><button type="button" id="copy-listen-link-button" class="btn btn-sm" onclick="$.fn.copy_listen_link()"><img src="icons/clipboard-plus.svg" alt="" width="15" height="15" title="Bootstrap"></button></div></label>
             </form>
           </div>
           <div class="modal-footer">
@@ -546,14 +553,14 @@
       <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-body">
-                <h3>About Discourse.FM</h3>
+                <h3>About Discourse.fm</h3>
                 <p>Since ancient times, humans have relied on spoken language to collaborate, organize, and connect with one another. But in recent times, much of our meaningful dialogue has been locked away in written text on the internet - taking the form of email, social media posts, comment sections, and instant messages. And even when we do speak online, it's often controlled or moderated by one individual or organization. In many ways, we've lost our ability to simply speak with one another at all, causing unprecented political divide and a decline in social relationships.
                 <br><br>
-                Discourse.FM is meant to be the simplest decentralized conversation tool on the internet. We don't expect to fix the entirety of the above problem, but we want to provide a tool that can at least <i>get the conversation going</i> again. 
+                Discourse.fm is meant to be the simplest decentralized conversation tool on the internet. We don't expect to fix the entirety of the above problem, but we want to provide a tool that can at least <i>get the conversation going</i> again. 
                 <br><br>    
-                To get started, simply create or join a discourse and let your voice be heard. Or to understand more of what you can do with Discourse.FM, head over to the <a onclick="$.fn.closeModalOpenModal('#aboutModal', '#FAQModal');" href="#">FAQ</a> section. 
+                To get started, simply create or join a discourse and let your voice be heard. Or to understand more of what you can do with Discourse.fm, head over to the <a onclick="$.fn.closeModalOpenModal('#aboutModal', '#FAQModal');" href="#">FAQ</a> section. 
                 <br><br>
-                Discourse.FM is a blend of Node, Golang, and native Javascript. It was built on top of <a href="https://github.com/pion/">Pion</a> and <a href="https://github.com/MixinNetwork/kraken/">Kraken</a> - special thanks to these open-source projects/communities.
+                Discourse.fm is a blend of Node, Golang, and native Javascript. It was built on top of <a href="https://github.com/pion/">Pion</a> and <a href="https://github.com/MixinNetwork/kraken/">Kraken</a> - special thanks to these open-source projects/communities.
                 </p>
             </div>
         </div>
@@ -564,7 +571,7 @@
       <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-body">
-                <h3>What is Discourse.FM?</h3>
+                <h3>What is Discourse.fm?</h3>
                 <p>A platform for live, decentralized, broadcasted audio conferencing.</p>
                 <h3>What can I do with it?</h3>
                 <p>Quite a bit. Like a podcast, you can use it as a stage for dialogue. Like a radio station, you can use it to project a message to a wide audience. However discourses can be private, meaning they can be used for closed hangouts, meetings, and much more.</p>
@@ -585,7 +592,7 @@
                 <h3>Are discourses monitored? Am I being listened to by the creators of discourse.fm in a private discourse?</h3>
                 <p>No and no. We are placing trust in you to use discourse.fm with respect, and to follow the community standards/guidlines found in the <a onclick="$.fn.closeModalOpenModal('#FAQModal', '#philosophyModal');" href="#">Philosophy</a> section.</p> 
                 <h3>Was this created in response to Covid-19? Or the current political climate?</h3>
-                <p>Sort of. The original idea was actually conceived in the Fall of 2019 as a way to combat boredness on a long commute. But when lockdown began it was clear this would be a great time to build it. It was made even clearer in the heat of the political turmoil later in the year. Now, more than ever, people need to be talking.</p>
+                <p>Sort of. The original idea was actually conceived in the Fall of 2019 as a way to combat boredom on a long commute, but when lockdown began it was clear this would be a great time to build it. It was made even more apparent in the heat of the political turmoil later in the year. Now, more than ever, people need to be speaking to one another.</p>
             </div>
         </div>
       </div> 
@@ -625,7 +632,7 @@
       <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-body">
-                We've got big plans for discourse.fm. If you'd like to stay updated on our progress, <!--feel free to add your email below or follow us on Twitter.--> check back in here occasionally. We'll also be opening some more channels for communication very soon. 
+                We've got big plans for Discourse.fm. If you'd like to stay updated on our progress, <!--feel free to add your email below or follow us on Twitter.--> check back in here occasionally. We'll also be opening some more channels for communication very soon. 
             </div>
         </div>
       </div> 

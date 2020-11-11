@@ -7,6 +7,7 @@
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <link rel="shortcut icon" href="../favicon.ico">
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
@@ -16,7 +17,8 @@
   <style>
     
   </style>
-      <script src="../socket.io-client/dist/socket.io.js"></script>
+      <script src="../js/socket.io-client/dist/socket.io.js"></script>
+      <script src="../js/browser-mobile-check.js"></script>
       <script src="../js/Base64.js"></script>
       <script src="../js/krakenclient.js"></script>
       <script src="../js/roundtable.js"></script>
@@ -30,6 +32,13 @@
             socket.on('connect',function() {
                console.log('Client has connected to the server!');
             });
+            
+            var isMobile = $.fn.mobileAndTabletCheck();
+            var isCompatibleBrowser = $.fn.browserCheck();
+            
+            if(isMobile == true || isCompatibleBrowser == false){
+                window.alert('Hold up! It looks like you may be using an incompatible device or browser. For best results, we recommend using Discourse.fm on Chrome desktop for now.');
+            }
             
             function uuidv4() {
                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -156,6 +165,7 @@
             
             // get data 
             var local_discourse_data = localStorage.getItem(UDI);
+            console.log(local_discourse_data);
             local_discourse_data = JSON.parse(local_discourse_data);
             
             if(local_discourse_data != null){
@@ -175,7 +185,6 @@
             
             var current_listeners = 0;
             var current_participants = 0;
-                
             socket.emit('auth_into_discourse', auth_into_discourse_array, function(err,data){
                 if(err != 'error'){
                     if(data != null){
@@ -183,6 +192,7 @@
                             //add proper handler if discourse has ended 
                             $.fn.populateDiscourseContent(data, 'ended');
                         }else{
+                            console.log(data);
                             if(data['join_auth'] == false && data['listen_auth'] == false){
                                 //tell user to revisit the join/listen links and then redirect them to the home page (probably a hacker, but let's not accuse them) 
                                 window.alert('You are not authorized to join or listen to this discourse. Make sure local storage is not disabled and revisit the join or listen link for this discourse to try again.');
@@ -286,12 +296,12 @@
                     $('#UDI-link').css('display', 'block');
                 }
                 if(show_listen){
-                    listen_link = 'https://www.discourse.fm/lid=' + LID;
+                    listen_link = 'https://www.discourse.fm/?lid=' + LID;
                     $('#listen-link-label').html(listen_link);
                     $('#listen-link').css('display', 'block');
                 }
                 if(show_join){
-                    join_link = 'https://www.discourse.fm/jid=' + JID;
+                    join_link = 'https://www.discourse.fm/?jid=' + JID;
                     $('#join-link-label').html(join_link);
                     $('#join-link').css('display', 'block');
                 }
@@ -397,8 +407,8 @@
             
       </script>
   </head>
-  <body> 
-    
+  <body>
+      
     <a href="../" style="position:absolute;top:5px;left:5px;">
         <img src="../icons/house.svg" style="height:35px;width:auto;"/>  
     </a>
