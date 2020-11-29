@@ -7,38 +7,90 @@
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
-    <link rel="shortcut icon" href="../favicon.ico">
+    <link rel="shortcut icon" href="../icoicon.ico">
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
-    <title>Discourse.FM</title>
+    <title>Discourse.fm</title>
   <style>
     
   </style>
       <script src="../js/socket.io-client/dist/socket.io.js"></script>
-      <script src="../js/browser-mobile-check.js"></script>
+      <script src="../js/mobile-browser-check.js"></script>
       <script src="../js/Base64.js"></script>
       <script src="../js/krakenclient.js"></script>
       <script src="../js/roundtable.js"></script>
+      <script src="../js/clipboard/dist/clipboard.min.js"></script>
       <script>
         $( document ).ready(function() {
             //var socket = io.connect("http://127.0.0.1:3000");
-            var socket = io.connect("https://discourse.fm");
-            //var socket = io.connect('/');
+            var socket = io.connect("https://www.discourse.fm"); 
+            
+            var connection_state = null;
+            
+            //get user id, or set if doesn't exist
+            var user_id = localStorage.getItem('user_id');
+            if (!user_id || user_id == "null" || user_id == null) { 
+               user_id = uuidv4();
+               localStorage.setItem('user_id', user_id);
+            }
+            
+            var pathSplit = location.pathname.split('/');
+            var UDI = pathSplit[pathSplit.length - 1];
+            
+            var JID = null;
+            var LID = null;
+            var JID_secret = null;
+            var LID_secret = null;
+            
+            // get data 
+            var local_discourse_data = localStorage.getItem(UDI);
+            console.log(local_discourse_data);
+            local_discourse_data = JSON.parse(local_discourse_data);
+            
+            if(local_discourse_data != null){
+                JID = local_discourse_data['JID'];
+                JID_secret = local_discourse_data['JID_secret'];
+                LID = local_discourse_data['LID'];
+                LID_secret = local_discourse_data['LID_secret'];
+            }
             
             // Add a connect listener
             socket.on('connect',function() {
                console.log('Client has connected to the server!');
+                
+               if(connection_state == 'participant'){
+                    //in this case, the user has probably been kicked out of the roundtable
+                    //but probably still in the audio conference. They're basically a ghost.
+                    //we want the server to reinstate them
+                    var reinstate_participant_data = {
+                        "UDI": UDI,
+                        "user_id": user_id,
+                        "JID": JID,
+                        "LID": LID,
+                        "JID_secret": JID_secret,
+                        "LID_secret": LID_secret
+                    }
+                    socket.emit('reinstate_participant', reinstate_participant_data, function(err, data){
+                        if(err == 'null'){
+                            console.log('user reinstated.');
+                        }
+                    })
+                }
             });
             
-            var isMobile = $.fn.mobileAndTabletCheck();
-            var isCompatibleBrowser = $.fn.browserCheck();
+            var isIncompatibleBrowser = $.fn.isIncompatibleBrowser();
             
-            if(isMobile == true || isCompatibleBrowser == false){
-                window.alert('Hold up! It looks like you may be using an incompatible device or browser. For best results, we recommend using Discourse.fm on Chrome desktop for now.');
+            if(isIncompatibleBrowser){
+                window.alert('Hold up! It looks like you may be using an incompatible device and browser. Discourse.fm will not work on iOS Chrome or iOS Firefox at the moment. For best results, we recommend using desktop Chrome.');
             }
+            
+            
+            new ClipboardJS('#UDI-link-button');
+            new ClipboardJS('#join-link-button');
+            new ClipboardJS('#listen-link-button');
             
             function uuidv4() {
                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -64,16 +116,6 @@
                 }
             }
             
-            //get user id, or set if doesn't exist
-            var user_id = localStorage.getItem('user_id');
-            if (!user_id || user_id == "null" || user_id == null) { 
-               user_id = uuidv4();
-               localStorage.setItem('user_id', user_id);
-            }
-            
-            var pathSplit = location.pathname.split('/');
-            var UDI = pathSplit[pathSplit.length - 1];
-            
             var nickname = localStorage.getItem(UDI+':'+user_id);
             if(nickname != null){
                 var uname = user_id + ':' + Base64.encode(nickname);
@@ -81,55 +123,17 @@
                 update_uname_history(UDI, uname);
             }
             
-            $.fn.copy_to_clipboard = function(text){
-                var el = document.createElement('textarea');
-                el.textContent = text;
-                document.body.appendChild(el);
-                
-                var selection = document.getSelection();
-                var range = document.createRange();
-                
-                range.selectNode(el);
-                selection.removeAllRanges();
-                selection.addRange(range);
-                
-                console.log('copy success', document.execCommand('copy'));
-                selection.removeAllRanges();
-                
-                document.body.removeChild(el);
-            }
-            
             var UDI_link;
             var join_link;
             var listen_link;
             
-            $.fn.copy_UDI_link = function(){
-                $.fn.copy_to_clipboard(UDI_link);
-                $('#copy-UDI-link-button').tooltip({title: 'Copied!'});
-                $('#copy-UDI-link-button').tooltip('show');
+            $.fn.show_link_tooltip = function(type){
+                $('#' + type + '-link-button').tooltip({title: 'Copied!'});
+                $('#' + type + '-link-button').tooltip('show');
                 setTimeout(function(){
-                    $('#copy-UDI-link-button').tooltip('dispose');
+                    $('#' + type + '-link-button').tooltip('dispose');
                 }, 1000);
             }
-            
-            $.fn.copy_join_link = function(){
-                $.fn.copy_to_clipboard(join_link);
-                $('#copy-join-link-button').tooltip({title: 'Copied!'});
-                $('#copy-join-link-button').tooltip('show');
-                setTimeout(function(){
-                    $('#copy-join-link-button').tooltip('dispose');
-                }, 1000);
-            }
-            
-            $.fn.copy_listen_link = function(){
-                $.fn.copy_to_clipboard(listen_link);
-                $('#copy-listen-link-button').tooltip({title: 'Copied!'});
-                $('#copy-listen-link-button').tooltip('show');
-                setTimeout(function(){
-                    $('#copy-listen-link-button').tooltip('dispose');
-                }, 1000);
-            }
-            
             
             $.fn.setNickName = function(){
                     nickname = $('#nickname-input').val(); 
@@ -158,22 +162,8 @@
                     }
             }
             
-            var JID = null;
-            var LID = null;
-            var JID_secret = null;
-            var LID_secret = null;
-            
-            // get data 
-            var local_discourse_data = localStorage.getItem(UDI);
-            console.log(local_discourse_data);
-            local_discourse_data = JSON.parse(local_discourse_data);
-            
-            if(local_discourse_data != null){
-                JID = local_discourse_data['JID'];
-                JID_secret = local_discourse_data['JID_secret'];
-                LID = local_discourse_data['LID'];
-                LID_secret = local_discourse_data['LID_secret'];
-            }
+            var current_listeners = 0;
+            var current_participants = 0;
             
             var auth_into_discourse_array = {
                 "UDI": UDI,
@@ -183,8 +173,6 @@
                 "LID_secret": LID_secret
             }
             
-            var current_listeners = 0;
-            var current_participants = 0;
             socket.emit('auth_into_discourse', auth_into_discourse_array, function(err,data){
                 if(err != 'error'){
                     if(data != null){
@@ -292,17 +280,17 @@
                 
                 if(show_URL){
                     UDI_link = 'https://www.discourse.fm/live/' + UDI;
-                    $('#UDI-link-label').html(UDI_link);
+                    $('#UDI-link-text').val(UDI_link);
                     $('#UDI-link').css('display', 'block');
                 }
                 if(show_listen){
                     listen_link = 'https://www.discourse.fm/?lid=' + LID;
-                    $('#listen-link-label').html(listen_link);
+                    $('#listen-link-text').val(listen_link);
                     $('#listen-link').css('display', 'block');
                 }
                 if(show_join){
                     join_link = 'https://www.discourse.fm/?jid=' + JID;
-                    $('#join-link-label').html(join_link);
+                    $('#join-link-text').val(join_link);
                     $('#join-link').css('display', 'block');
                 }
             }
@@ -310,6 +298,7 @@
             $.fn.leaveDiscourse = function(){
                 $.fn.listenToDiscourse();
                 $.fn.removeSeat(user_id);
+                connection_state = 'listener';
                 $('#micicon').css('display', 'none');
                 $('#micicon').attr("src", '../icons/mic.svg');
                 $('#micicon').data('muted', "unmuted");
@@ -354,9 +343,10 @@
                          "connection_type": "join"
                      }
                      socket.emit('connectToDiscourse', connection_data, function(err, data){
-//                         if(err == null){
-//                             $.fn.updateListeners(data['current_listeners']);
-//                         }
+                         if(err == null){
+                             connection_state = 'participant';
+                             // $.fn.updateListeners(data['current_listeners']);
+                         }
                      });
                      $.fn.toggleJoinButton();
                      $('#micicon').css('display', 'block');
@@ -374,9 +364,10 @@
                          "connection_type": "listen"
                      }
                      socket.emit('connectToDiscourse', connection_data, function(err, data){
-//                         if(err == null){
-//                             $.fn.updateListeners(data['current_listeners']);
-//                         }
+                         if(err == null){
+                             connection_state = 'listener';
+                             //$.fn.updateListeners(data['current_listeners']);
+                         }
                      });
                     $.fn.toggleJoinButton();
             }
@@ -401,6 +392,11 @@
             socket.on('removeSeat', function(remove_seat_data, handler){
                 var id_to_remove = remove_seat_data['user_id'];
                 $.fn.removeSeat(id_to_remove);
+            });
+            
+            socket.on('reinstate_participant_client', function(rp_data, handler){
+                var id_to_add = rp_data['user_id'];
+                $.fn.addSeat(id_to_add);
             });
             
         });
@@ -449,9 +445,44 @@
         <div class="modal-content">
            <div class="modal-body">
                <h4 id="discourseShareStatus"></h4>
-                <label id="UDI-link" style="display: none;">Link to Discourse: <br><div class="container" style="background-color:rgba(0,0,0,0.025);"><span class="private-links mr-3" id="UDI-link-label" style="font-size:10.5px;"></span><button type="button" id="copy-UDI-link-button" class="btn btn-sm" onclick="$.fn.copy_UDI_link()"><img src="../icons/clipboard-plus.svg" alt="" width="15" height="15" title="Bootstrap"></button></div></label>
-                <label id="join-link" style="display: none;">Join Link: <br><div class="container" style="background-color:rgba(0,0,0,0.025);"><span class="private-links mr-3" id="join-link-label" style="font-size:10.5px;"></span><button type="button" id="copy-join-link-button" class="btn btn-sm" onclick="$.fn.copy_join_link()"><img src="../icons/clipboard-plus.svg" alt="" width="15" height="15" title="Bootstrap"></button></div></label>
-                <label id="listen-link" style="display: none;">Listen Link: <br><div class="container" style="background-color:rgba(0,0,0,0.025);"><span class="private-links mr-3" id="listen-link-label" style="font-size:10.5px;"></span><button type="button" id="copy-listen-link-button" class="btn btn-sm" onclick="$.fn.copy_listen_link()"><img src="../icons/clipboard-plus.svg" alt="" width="15" height="15" title="Bootstrap"></button></div></label>
+                <div class="input-group mb-3" id="UDI-link" style="display: none">
+                    <div class="input-group mb-3">
+                    <!-- Target -->
+                    <input id="UDI-link-text" class="form-control" name="UDI-link-text" onclick="this.select()" readonly>
+                    <!-- Trigger -->
+                        <div class="input-group-append">
+                            <button class="btn btn-outline" id="UDI-link-button" type="button" data-clipboard-target="#UDI-link-text" style="border-color:#ced4da" onclick="$.fn.show_link_tooltip('UDI');">
+                                <img src="../icons/clipboard-plus.svg" alt="Copy to clipboard">
+                            </button>
+                        </div>
+                    </div>
+                </div>
+               
+                <div class="input-group mb-3" id="join-link" style="display: none">
+                <div class="input-group mb-3">
+                <!-- Target -->
+                <input id="join-link-text" class="form-control" name="join-link-text" onclick="this.select()" readonly>
+                <!-- Trigger -->
+                    <div class="input-group-append">
+                        <button class="btn btn-outline" id="join-link-button" type="button" data-clipboard-target="#join-link-text" style="border-color:#ced4da" onclick="$.fn.show_link_tooltip('join');">
+                            <img src="../icons/clipboard-plus.svg" alt="Copy to clipboard">
+                        </button>
+                    </div>
+                </div>
+                </div>
+               
+                <div class="input-group mb-3" id="listen-link" style="display: none">
+                <div class="input-group mb-3">
+                <!-- Target -->
+                <input id="listen-link-text" class="form-control" name="listen-link-text" onclick="this.select()" readonly>
+                <!-- Trigger -->
+                    <div class="input-group-append">
+                        <button class="btn btn-outline" id="listen-link-button" type="button" data-clipboard-target="#listen-link-text" style="border-color:#ced4da" onclick="$.fn.show_link_tooltip('listen');">
+                            <img src="../icons/clipboard-plus.svg" alt="Copy to clipboard">
+                        </button>
+                    </div>
+                </div>
+                </div>
            </div>
         </div>
       </div> 

@@ -1,12 +1,15 @@
 var MongoClient = require('mongodb').MongoClient;
-var url = "mongodb://localhost:27017/discourseListDatabase";
 
-MongoClient.connect(url, function(err, db) {
+var database = "discourseListDatabase";
+var url = "mongodb://localhost:27017/" + database;
+
+var collection = "discourseTweets"
+MongoClient.connect(url, {useNewUrlParser: true, useUnifiedTopology: true}, function(err, db) {
   if (err) throw err;
-  var dbo = db.db("discourseListDatabase");
-  dbo.createCollection("discourseList", function(err, res) {
+  var dbo = db.db(database);
+  dbo.createCollection(collection, function(err, res) {
     if (err) throw err;
-    console.log("discourseList Collection created!");
+    console.log(collection + " Collection created!");
     db.close();
   });
 });

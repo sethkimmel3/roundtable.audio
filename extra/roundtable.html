@@ -19,10 +19,29 @@
       <script src="../js/roundtable.js"></script>
   </head>
   <body>
-      
+    <script>
+        
+    var seatCount = 0;
+        
+    function addSeat(){
+        $.fn.addSeat(seatCount.toString(), seatCount, false);
+        seatCount += 1;
+    } 
+        
+    function removeSeat(){
+        $.fn.removeSeat(seatCount - 1);
+        seatCount -= 1;
+    }
+    
+    function addAudioPulse(){
+        var value = Math.floor(Math.random() * Math.floor(25));
+        $.fn.addAudioPulse(0, value);
+    }
+    </script>
     <canvas id="roundtable"></canvas>
     
-    <button onclick="$.fn.addSeat()">Add Seat</button>
-    <button onclick="$.fn.removeSeat()">Remove Seat</button>
+    <button onclick="addSeat()">Add Seat</button>
+    <button onclick="removeSeat()">Remove Seat</button>
+    <button onclick="addAudioPulse()">Send Pulse</button>
   </body>
 </html>

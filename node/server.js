@@ -204,7 +204,7 @@ io.on('connection', (socket) => {
     var connection_state = null;
     var user_id;
     
-     socket.on('disconnecting', () => {
+    socket.on('disconnecting', (reason) => {  
         if(Object.keys(auth_creds).length > 0){
             for(var UDI in auth_creds) break;
             if(connection_state == 'participant'){
@@ -227,8 +227,62 @@ io.on('connection', (socket) => {
         } 
     });
     
-    socket.on('disconnect', () => {
-        console.log('user disconnected');
+    socket.on('disconnect', (reason) => {
+        console.log('user disconnected due to: ' + reason);
+    });
+    
+    socket.on('reinstate_participant', function(reinstate_participant_data, handler){
+        try{
+            var UDI = reinstate_participant_data['UDI'];
+            var user_id = reinstate_participant_data['user_id'];
+            
+            // do a mini-auth to make sure they're actually supposed to be allowed in
+            callfindDiscourseByUDIPromise(user_UDI).then(function(res){
+               var to_return; 
+               if(res != null && res != "ERROR! More than one discourse with this UDI!"){
+                   var join_auth; 
+                   var listen_auth;
+                   
+                   if(res[0]['JID'] == null){
+                       join_auth = true;
+                   }else if(res[0]['JID'] != null && user_JID == res[0]['JID'] && user_JID_secret == res[0]['JID_secret']){
+                       join_auth = true;
+                   }else if(res[0]['JID'] != null && (user_JID != res[0]['JID'] || user_JID_secret != res[0]['JID_secret'])){
+                       join_auth = false;
+                   }
+                   
+                   if(res['LID'] == null){
+                       listen_auth = true;
+                   }else if(res[0]['LID'] != null && user_LID == res[0]['LID'] && user_LID_secret == res[0]['LID_secret']){
+                       listen_auth = true;
+                   }else if(res[0]['LID'] != null && (user_LID != res[0]['LID'] || user_LID_secret != res[0]['LID_secret'])){
+                       listen_auth = false;
+                   }
+                   
+                   auth_creds[UDI] = {
+                       'RID': RID,
+                       'join_auth': join_auth,
+                       'listen_auth': listen_auth
+                   }
+                   
+                   var RID = res[0]['RID'];
+                   
+                   if(join_auth == true){
+                       connection_state = 'participant';
+                       socket.join(RID);
+                        
+                       var reinstate_participant_data = {
+                           "user_id": user_id
+                       }
+                       io.sockets.in(RID).emit('reinstate_participant_client', user_id);
+                       handler(null, 'success');
+                   }
+               }
+            });
+        } catch (error){
+            handler(error, null);
+            console.log(error);
+        }
     });
     
     socket.on('create_discourse', function(discourse_data, handler){
@@ -264,8 +318,7 @@ io.on('connection', (socket) => {
                     var public_listen = true;
                 }
 
-                var datetime = new Date();
-                var discourse_start_datetime = datetime.toUTCString();
+                var discourse_start_datetime = new Date();;
                 var discourse_end_datetime = null;
 
                 var discourse_current_participants = 0;
@@ -498,7 +551,7 @@ io.on('connection', (socket) => {
         } catch(error){
             handler(error, null);
         }
-    })
+    });
     
     socket.on('turn', function(turn_data, handler){
        try{
@@ -639,8 +692,8 @@ cron.schedule('* * 0,6,12,18 * * *', () =>{
                     to_end.push(UDI);
                 }
             }
-            var datetime = new Date();
-            var end_time = datetime.toUTCString();
+
+            var end_time = new Date();
             if(to_end.length > 0){
                 var query = { UDI: { $in: to_end } };
                 var update = { $set: {end_datetime: end_time } };

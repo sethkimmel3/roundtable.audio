@@ -268,11 +268,7 @@ function track_speaking(id, analyser){
         i = 0; 
         while(i < dataArray.length) total += dataArray[i++];   // add all
         average = dataArray.length ? total / dataArray.length : 0; 
-        if(average > threshold){
-            $.fn.addToSpeaking(id);
-        }else{
-            $.fn.removeFromSpeaking(id);
-        }
+        $.fn.addAudioPulse(id, average);
         if (participant_ids.includes(id)) {
         setTimeout(function () {
             update();

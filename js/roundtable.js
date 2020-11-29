@@ -33,12 +33,10 @@ $( document ).ready(function() {
     var seats = [];
 
     var steps = 50;
-    var moving = false;
     var listeners = 0;
-    var speaking = [];
+    var pulseVal;
 
     function draw(){
-        moving = false;
 
         ctx.clearRect(0, 0, c.width, c.height);
 
@@ -65,35 +63,54 @@ $( document ).ready(function() {
             seat = seats[i];
             currentAngle = seat["currentAngle"];
             destAngle = seat["destAngle"];
-            step = (destAngle - currentAngle)/steps;
-            var xPos = roundtable_width/2 + outerRadius*Math.cos(currentAngle + step);
-            var yPos = roundtable_width/2 + outerRadius*Math.sin(currentAngle + step);
-            seat["currentAngle"] = currentAngle + step;
+            if(Math.abs(destAngle - currentAngle) > 0.01){
+                moving = true;
+                step = (destAngle - currentAngle)/steps;
+                var xPos = roundtable_width/2 + outerRadius*Math.cos(currentAngle + step);
+                var yPos = roundtable_width/2 + outerRadius*Math.sin(currentAngle + step);
+                seat["currentAngle"] = currentAngle + step;
+            }else{
+                var xPos = roundtable_width/2 + outerRadius*Math.cos(currentAngle);
+                var yPos = roundtable_width/2 + outerRadius*Math.sin(currentAngle);
+            }
             ctx.beginPath();
             ctx.arc(xPos, yPos, roundtable_width/(8 + 3*Math.atan(seats.length/5)), 0, 2 * Math.PI);
             ctx.lineWidth = 5;
             ctx.fillStyle = seat["color"];
             ctx.fill();
-            if(speaking.includes(seat["id"])){
-                ctx.strokeStyle = speaking_color;
-            }else{
-                ctx.strokeStyle = non_speaking_color;
-            }
+            ctx.strokeStyle = non_speaking_color;
             ctx.stroke();
             ctx.font = '18px Arial';
             ctx.fillStyle = 'black';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(seat["name"], xPos, yPos);
-            if(Math.abs(destAngle - currentAngle) > 0.01){
-                moving = true;
-            }
+            
+           for(var j = 15; j > -1; j--){
+               pulseVal = seat["audioPulses"][j];
+               if(pulseVal > 0.0){
+                   active_pulses = true;
+                   var minRadius = roundtable_width/(8 + 3*Math.atan(seats.length/5));
+                   var maxRadius = 1.15*(roundtable_width/(8 + 3*Math.atan(seats.length/5)));
+                   var radius = minRadius + (j/16)*(maxRadius - minRadius);
+                   ctx.beginPath();
+                   ctx.arc(xPos, yPos, radius, 0, 2 * Math.PI);
+                   ctx.lineWidth = 0.1*pulseVal;
+                   //ctx.lineWidth = 5*Math.log(pulseVal + 1);
+                   ctx.strokeStyle = speaking_color;
+                   ctx.globalAlpha = 1 - (j/16);
+                   ctx.stroke();
+                   ctx.globalAlpha = 1;
+               }
+               if(j != 0){
+                   seat["audioPulses"][j] = seat["audioPulses"][j - 1];
+               }else{
+                   seat["audioPulses"][0] = 0;
+               }
+           }
         }
-        if(moving){
-            window.requestAnimationFrame(draw);
-        }
+        window.requestAnimationFrame(draw);
     }
-
 
     function addSeat(name, id, isUser){
         if(isUser){
@@ -106,6 +123,7 @@ $( document ).ready(function() {
             "id": id,
             "isUser": isUser,
             "isMuted": false,
+            "audioPulses": new Array(16).fill(0), //Length-16 Int Array represents time-series of audio pulses
             "color": seatColor,
             "currentAngle": 0,
             "destAngle": 0
@@ -133,9 +151,6 @@ $( document ).ready(function() {
             seats[i]["currentAngle"] = posRadiansOld;
             seats[i]["destAngle"] = posRadiansNew;
         }
-        if(!moving){
-            window.requestAnimationFrame(draw);
-        }
     }
 
     function removeSeat(id){
@@ -155,38 +170,26 @@ $( document ).ready(function() {
             seats[i]["currentAngle"] = posRadiansOld;
             seats[i]["destAngle"] = posRadiansNew;
         }
-        if(!moving){
-            window.requestAnimationFrame(draw);
-        }
     }
 
     $.fn.addSeat = function(name, id, isUser){
-        //var name = seats.length.toString();
-        addSeat(name, id, isUser);
+        var index = seats.indexOf(id);
+        if(index == -1){
+            addSeat(name, id, isUser);
+        }
     }
 
     $.fn.removeSeat = function(id){
-        //var name = Math.floor(Math.random() * seats.length).toString();
         removeSeat(id);
     }
     
     $.fn.updateListeners = function(num){
         listeners = num;
-        draw();
-    }
-    
-    $.fn.addToSpeaking = function(id){
-        speaking.push(id);
-        draw();
-    }
-    
-    $.fn.removeFromSpeaking = function(id){
-        var index = speaking.indexOf(id);
-        if(index > -1){
-            speaking.splice(index, 1);
-        }
-        draw();
     }
 
+    $.fn.addAudioPulse = function(id, value){
+        var seat = seats.find(x => x.id === id);
+        seat["audioPulses"][0] = value;
+    }
     window.requestAnimationFrame(draw);
 }); 
