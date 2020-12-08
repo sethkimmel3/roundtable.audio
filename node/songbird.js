@@ -27,9 +27,9 @@ var post_tweet = (name, description, tags, public_join, public_listen, UDI) => {
         
         var tags_string = '';
         for(var i = 0; i < tags.length; i++){
-            tags_string += '#' + tags[i];
+            tags_string += '#' + tags[i].replace(/\s/g,'');
             if(i != tags.length - 1){
-                tags_string += ' ';
+                tags_string += ' '; 
             }
         }
         
@@ -50,7 +50,7 @@ var post_tweet = (name, description, tags, public_join, public_listen, UDI) => {
         var status = 'DISCOURSE BOT 🤖: \n';
         status += 'Name: ' + name + '\n';
         // (280 - 18 - UDI.length will ensure there are enough chars remaining for link)
-        if((status.length + (13 + description.length) < (280 - 18 - UDI.length)){
+        if((status.length + (13 + description.length) < (280 - 18 - UDI.length))){
             status += 'Description: ' + description + '\n';
         }
         if((status.length + tags_string.length) < (280 - 18 - UDI.length)){

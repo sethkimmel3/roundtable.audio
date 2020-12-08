@@ -22,6 +22,7 @@
     <script>
         
     var seatCount = 0;
+    var highlighted = false;
         
     function addSeat(){
         $.fn.addSeat(seatCount.toString(), seatCount, false);
@@ -37,11 +38,33 @@
         var value = Math.floor(Math.random() * Math.floor(25));
         $.fn.addAudioPulse(0, value);
     }
+        
+    function updateChatNotification(){
+        $.fn.updateChatNotificationCount(false, 0);
+    }
+        
+    function removeAllChatNotifications(){
+        $.fn.resetAllChatNotificationCounts();
+    }
+        
+    function updateHighlight(){
+        if(highlighted){
+            $.fn.updateHighlight(0, false);
+            highlighted = false;
+        }else{
+            $.fn.updateHighlight(0, true);
+            highlighted = true
+        }
+    }
+        
     </script>
     <canvas id="roundtable"></canvas>
     
     <button onclick="addSeat()">Add Seat</button>
     <button onclick="removeSeat()">Remove Seat</button>
     <button onclick="addAudioPulse()">Send Pulse</button>
+    <button onclick="updateChatNotification()">Update Chat Notification Count</button>
+    <button onclick="removeAllChatNotifications()">Reset All Chat Notifications</button>
+    <button onclick="updateHighlight()">Toggle Highlight On/Off</button>
   </body>
 </html>

@@ -515,14 +515,17 @@
               </div>
 <!--              <label id="join-link" style="display: none;">Private Joining Link: <br><div class="container" style="background-color:rgba(0,0,0,0.025);"><span class="private-links mr-3" id="join-link-label" style="font-size:10.5px;"></span><button type="button" id="copy-join-link-button" class="btn btn-sm" onclick="$.fn.copy_join_link()"><img src="icons/clipboard-plus.svg" alt="" width="15" height="15" title="Bootstrap"></button></div></label>-->
                 
-                <div class="input-group mb-3" id="join-link" style="display: none;">
-                <!-- Target -->
-                <input id="join-link-text" class="form-control" value="" onclick="this.select()" readonly>
-                <!-- Trigger -->
-                    <div class="input-group-append">
-                        <button class="btn btn-outline" id="join-link-button" type="button" data-clipboard-target="#join-link-text" style="border-color:#ced4da" onclick="$.fn.copy_join_link_tooltip();">
-                            <img src="icons/clipboard-plus.svg" alt="Copy to clipboard">
-                        </button>
+                <div class="form-group" id="join-link" style="display: none;">
+                    <label for="join-link-text">Private Join Link:</label>
+                    <div class="input-group mb-3">
+                    <!-- Target -->
+                    <input id="join-link-text" class="form-control" value="" onclick="this.select()" readonly>
+                    <!-- Trigger -->
+                        <div class="input-group-append">
+                            <button class="btn btn-outline" id="join-link-button" type="button" data-clipboard-target="#join-link-text" style="border-color:#ced4da" onclick="$.fn.copy_join_link_tooltip();">
+                                <img src="icons/clipboard-plus.svg" alt="Copy to clipboard">
+                            </button>
+                        </div>
                     </div>
                 </div>
                 
@@ -536,14 +539,17 @@
               </div>
 <!--              <label id="listen-link" style="display: none;">Private Listening Link: <br><div class="container" style="background-color:rgba(0,0,0,0.025);"><span class="private-links mr-3" id="listen-link-label" style="font-size:10.5px;"></span><button type="button" id="copy-listen-link-button" class="btn btn-sm" onclick="$.fn.copy_listen_link()"><img src="icons/clipboard-plus.svg" alt="" width="15" height="15" title="Bootstrap"></button></div></label>-->
                 
-                <div class="input-group mb-3" id="listen-link" style="display: none;">
-                <!-- Target -->
-                <input id="listen-link-text" class="form-control" value="" onclick="this.select()" readonly>
-                <!-- Trigger -->
-                    <div class="input-group-append">
-                        <button class="btn btn-outline" id="listen-link-button" type="button" data-clipboard-target="#listen-link-text" style="border-color:#ced4da" onclick="$.fn.copy_listen_link_tooltip();">
-                            <img src="icons/clipboard-plus.svg" alt="Copy to clipboard">
-                        </button>
+                <div class="form-group" id="listen-link" style="display: none;">
+                    <label for="listen-link-text">Private Listen Link:</label>
+                    <div class="input-group mb-3">
+                    <!-- Target -->
+                    <input id="listen-link-text" class="form-control" value="" onclick="this.select()" readonly>
+                    <!-- Trigger -->
+                        <div class="input-group-append">
+                            <button class="btn btn-outline" id="listen-link-button" type="button" data-clipboard-target="#listen-link-text" style="border-color:#ced4da" onclick="$.fn.copy_listen_link_tooltip();">
+                                <img src="icons/clipboard-plus.svg" alt="Copy to clipboard">
+                            </button>
+                        </div>
                     </div>
                 </div>
                 

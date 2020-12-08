@@ -22,6 +22,7 @@
       <script src="../js/Base64.js"></script>
       <script src="../js/krakenclient.js"></script>
       <script src="../js/roundtable.js"></script>
+      <script src="../js/chat.js"></script>
       <script src="../js/clipboard/dist/clipboard.min.js"></script>
       <script>
         $( document ).ready(function() {
@@ -122,6 +123,15 @@
                 var unameRPC = encodeURIComponent(uname);
                 update_uname_history(UDI, uname);
             }
+            
+            //we'll want a consistent listener id for chat purposes
+            var listener_id = localStorage.getItem(UDI+':'+user_id+':listener_id');
+            
+            if(listener_id == null){
+                 listener_id = 'listener ' + Math.floor(Math.random() * 100000000).toString();
+                 localStorage.setItem(UDI+':'+user_id+':listener_id', listener_id);
+            }
+            console.log(listener_id);
             
             var UDI_link;
             var join_link;
@@ -372,6 +382,76 @@
                     $.fn.toggleJoinButton();
             }
             
+            $.fn.sendMessage = function(){
+                var message = $('#chat-window-input').val();
+                if(message.length < 1000){
+                    if(connection_state == 'participant'){
+                        var message_sender_name = nickname;
+                    }else{
+                        var message_sender_name = listener_id;
+                    }
+
+                    var message_data = {
+                        "message_sender_state": connection_state,
+                        "message_sender_id": user_id,
+                        "message_sender_name": message_sender_name,
+                        "message": message
+                    }
+
+                    socket.emit('clientMessage', message_data, function(err, data){
+                        if(err == null){
+                            console.log('send message success.');
+                            $('#chat-window-input').val('');
+                        }else{
+                            console.log(err);
+                        }
+                    });
+                }else{
+                    window.alert('message must be less than 1000 characters.');
+                }
+            }
+            
+            socket.on('serverMessage', function(message_data, handler){
+                if(message_data['message_sender_state'] == 'participant'){
+                    var is_participant = true;
+                }else{
+                    var is_participant = false;
+                }
+                if(message_data['message_sender_id'] == user_id){
+                    var is_user = true;
+                }else{
+                    var is_user = false;
+                }
+                $.fn.addNewMessage(is_participant, is_user, message_data['message_sender_name'], message_data['message_sender_id'], message_data['message']);
+                if($('#chat-window').is(':hidden')){
+                    $.fn.addNotificationCircle();
+                    if(is_participant){
+                        $.fn.updateChatNotificationCount(false, message_data['message_sender_id']);
+                    }else{
+                        $.fn.updateChatNotificationCount(true, null);
+                    }
+                }
+            });
+            
+            $.fn.chatIconClicked = function(){
+                $.fn.toggleChatWindow();
+                $.fn.resetAllChatNotificationCounts();
+            }
+            
+            $(document).on('mouseenter', '.chatMessage', function(){
+                if($(this).data('is_participant')){
+                    $.fn.updateHighlight($(this).data('user_id'), true);
+                    $(this).css('background-color', '#bfd9bf');
+                }
+            });
+            
+            $(document).on('mouseleave', '.chatMessage', function(){
+                if($(this).data('is_participant')){
+                    $.fn.updateHighlight($(this).data('user_id'), false);
+                    $(this).css('background-color', 'white');
+                }
+            });
+            
             socket.on('updateDiscourseCount', function(count_data, handler){
                 console.log(count_data);
                 if(count_data['type'] == 'values'){
@@ -415,6 +495,23 @@
       
     <img src="../icons/mic.svg" id="micicon" style="height:35px;width:auto;position:absolute;bottom:5px;right:5px;display:none;cursor:pointer;" onclick="$.fn.toggleUserMute()" data-muted="unmuted"/>  
       
+    <div id="chat-window" style="position: absolute; bottom: 35px; left: 35px; width: 350px; height: 280px;  overflow: hidden; border-radius: 15px 15px 15px 0px; margin: 0 auto; padding: 20px 20px; transition: .5s; display: inline-block; box-shadow: 0 10px 15px rgba(0,0,0,0.3); z-index:2">
+      <div id="chat-messages" style="position:relative; bottom: 0px; width:350px; height: 200px; display: table-cell; vertical-align: bottom;">
+        <div id="chat-messages-container" style="overflow-y: scroll; max-height:200px; min-width: 100%;">
+        </div>
+      </div>
+      <form id="chat-form">
+        <div class="form-group" style="position:absolute;bottom: 0px; left: 0px; width:90%; margin: 5%; " class="mr-3">
+           <input type="text" class="form-control" id="chat-window-input" placeholder="Send a message">
+           <img id="send-message-icon" onclick="$.fn.sendMessage()" src="../icons/arrow-up-circle-fill-green.svg" style="position:absolute;bottom:5.5px;left:90%;height:25px;width:25px;cursor: pointer; opacity: 50%"/>
+        </div>
+      </form>  
+    </div>
+    <a href="#" style="position:absolute;bottom:5px;left:5px;" id='chat-icon' onclick="$.fn.chatIconClicked()">
+        <img src="../icons/chat-dots.svg" style="height:35px;width:35px;"/>  
+    </a>
+    <img id="notification-icon" src="../icons/circle-fill-red.svg" style="position:absolute;bottom:25px;left:28px;height:15px;width:15;"/>
+      
     <div class="modal fade" id="nickNameModal" tabindex="-1" aria-labelledby="nickNameModalLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -446,6 +543,7 @@
            <div class="modal-body">
                <h4 id="discourseShareStatus"></h4>
                 <div class="input-group mb-3" id="UDI-link" style="display: none">
+                    <label for="UDI-link-text">Discourse URL:</label>
                     <div class="input-group mb-3">
                     <!-- Target -->
                     <input id="UDI-link-text" class="form-control" name="UDI-link-text" onclick="this.select()" readonly>
@@ -459,6 +557,7 @@
                 </div>
                
                 <div class="input-group mb-3" id="join-link" style="display: none">
+                <label for="join-link-text">Private Join Link:</label>
                 <div class="input-group mb-3">
                 <!-- Target -->
                 <input id="join-link-text" class="form-control" name="join-link-text" onclick="this.select()" readonly>
@@ -472,6 +571,7 @@
                 </div>
                
                 <div class="input-group mb-3" id="listen-link" style="display: none">
+                <label for="listen-link-text">Private Listen Link:</label>
                 <div class="input-group mb-3">
                 <!-- Target -->
                 <input id="listen-link-text" class="form-control" name="listen-link-text" onclick="this.select()" readonly>

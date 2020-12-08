@@ -553,6 +553,18 @@ io.on('connection', (socket) => {
         }
     });
     
+    socket.on('clientMessage', function(message_data, handler){
+        try{
+            if(Object.keys(auth_creds).length > 0){
+                for(var UDI in auth_creds) break;
+                io.sockets.in(auth_creds[UDI]['RID']).emit('serverMessage', message_data);
+                handler(null, 'success');
+            }
+        } catch(error){
+            handler(error, null);
+        }
+    });
+    
     socket.on('turn', function(turn_data, handler){
        try{
            var unameRPC = turn_data['unameRPC'];

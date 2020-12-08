@@ -63,9 +63,11 @@ cron.schedule('0,30 * * * * *', () =>{
                 console.log('Discourses Started in Last Day: ');
                 cursor.each(function(err,item){
                     if(item != null){
-                        console.log('\t' + item['name']);
-                        console.log('\t \t Participants: ' + item['current_participants']);
-                        console.log('\t \t Listeners: ' + item['current_listeners']);
+                        console.log('\t Discourse Name: ' + item['name']);
+                        console.log('\t \t Description: ' + item['description']);
+                        console.log('\t \t Tags: ' + item['tags']);
+                        console.log('\t \t Max No. of Participants: ' + item['max_participants']);
+                        console.log('\t \t Max No. of Listeners: ' + item['max_listeners']);
                     }
                 });
             }

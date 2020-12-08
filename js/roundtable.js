@@ -5,8 +5,10 @@ $( document ).ready(function() {
     var table_outer_color = '#C4DBF6';
     var user_seat_color = '#B23850';
     var others_seat_color = '#E7E3D4';
+    var highlighted_color = '#bfd9bf';
     var speaking_color = '#3B8BEB';
-    var non_speaking_color = 'grey';
+    var non_speaking_color = 'grey'; 
+    var chat_notification_color = '#B23850';
 
     var window_width = $(window).width();
     var window_height = $(window).height();
@@ -34,6 +36,7 @@ $( document ).ready(function() {
 
     var steps = 50;
     var listeners = 0;
+    var listenersChatNotificationCount = 0;
     var pulseVal;
 
     function draw(){
@@ -58,6 +61,15 @@ $( document ).ready(function() {
         }
         ctx.fillText('+' + listeners.toString() + listeners_text, roundtable_width/2, roundtable_width/2);
         ctx.textBaseline = 'middle';
+        if(listenersChatNotificationCount > 0){
+            ctx.beginPath();
+            ctx.arc(roundtable_width/2, roundtable_width/2 + 30, 15, 0, 2 * Math.PI);
+            ctx.fillStyle = chat_notification_color;
+            ctx.fill();
+            ctx.font = '12px Arial';
+            ctx.fillStyle = 'black';
+            ctx.fillText(listenersChatNotificationCount.toString(), roundtable_width/2, roundtable_width/2 + 30);
+        }
 
         for(var i = 0; i < seats.length; i++){
             seat = seats[i];
@@ -74,9 +86,14 @@ $( document ).ready(function() {
                 var yPos = roundtable_width/2 + outerRadius*Math.sin(currentAngle);
             }
             ctx.beginPath();
-            ctx.arc(xPos, yPos, roundtable_width/(8 + 3*Math.atan(seats.length/5)), 0, 2 * Math.PI);
+            var radius = roundtable_width/(8 + 3*Math.atan(seats.length/5));
+            ctx.arc(xPos, yPos, radius, 0, 2 * Math.PI);
             ctx.lineWidth = 5;
-            ctx.fillStyle = seat["color"];
+            if(seat["highlighted"]){
+                ctx.fillStyle = highlighted_color;
+            }else{
+                ctx.fillStyle = seat["color"];
+            }
             ctx.fill();
             ctx.strokeStyle = non_speaking_color;
             ctx.stroke();
@@ -85,6 +102,16 @@ $( document ).ready(function() {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(seat["name"], xPos, yPos);
+            // add chat Notification Count
+            if(seat["chatNotificationCount"] > 0){
+                ctx.beginPath();
+                ctx.arc(xPos + radius - 15, yPos - radius + 15, 15, 0, 2 * Math.PI);
+                ctx.fillStyle = chat_notification_color;
+                ctx.fill();
+                ctx.font = '12px Arial';
+                ctx.fillStyle = 'black';
+                ctx.fillText(seat["chatNotificationCount"].toString(), xPos + radius - 15, yPos - radius + 15);
+            }
             
            for(var j = 15; j > -1; j--){
                pulseVal = seat["audioPulses"][j];
@@ -123,10 +150,12 @@ $( document ).ready(function() {
             "id": id,
             "isUser": isUser,
             "isMuted": false,
+            "highlighted": false,
             "audioPulses": new Array(16).fill(0), //Length-16 Int Array represents time-series of audio pulses
             "color": seatColor,
             "currentAngle": 0,
-            "destAngle": 0
+            "destAngle": 0,
+            "chatNotificationCount": 0
         }
         if(isUser){
             seats.unshift(seat);
@@ -191,5 +220,28 @@ $( document ).ready(function() {
         var seat = seats.find(x => x.id === id);
         seat["audioPulses"][0] = value;
     }
+    
+    $.fn.updateChatNotificationCount = function(listeners, id){
+        if(listeners){
+            listenersChatNotificationCount += 1;
+        }
+        else{
+            var seat = seats.find(x => x.id === id);
+            seat["chatNotificationCount"] += 1;
+        }
+    }
+    
+    $.fn.resetAllChatNotificationCounts = function(){
+        for(var i=0; i < seats.length; i++){
+            seats[i]["chatNotificationCount"] = 0;
+        }
+        listenersChatNotificationCount = 0;
+    }
+    
+    $.fn.updateHighlight = function(id, value){
+        var seat = seats.find(x => x.id === id);
+        seat["highlighted"] = value; 
+    }
+    
     window.requestAnimationFrame(draw);
 }); 
