@@ -62,8 +62,8 @@
         $( document ).ready(function() {
             //var socket = io.connect("http://127.0.0.1:3000");
             var socket = io.connect("https://www.discourse.fm");
-            //var socket = io.connect("/");
-  
+            //var socket = io.connect("/"); 
+
             // Add a connect listener
             socket.on('connect',function() {
                console.log('Client has connected to the server!');
@@ -321,6 +321,9 @@
             
             $('#discourse-tags').keyup(function(e){
                  var input = $(this).val().trim();
+                 if(input.startsWith('#')){
+                     input = input.substring(1);
+                 }
                  var tag_uuid = uuidv4();
                  tag_uuid_with_quotes = "'" + tag_uuid + "'";
                  JSON.stringify(tag_uuid_with_quotes);
@@ -398,6 +401,8 @@
                         server_LID = listen_id;
                     }
                     
+                    var max_allowed_participants = $('#max-allowed-participants-select').val();
+                    
                     var discourse_info_array = {
                                            "discourse-name": discourse_name,
                                            "discourse-description": discourse_description, 
@@ -405,7 +410,8 @@
                                            "join-visibility": join_visibility,
                                            "listen-visibility": listen_visibility,
                                            "discourse_JID": server_JID,
-                                           "discourse_LID": server_LID
+                                           "discourse_LID": server_LID,
+                                           "max-allowed-participants": max_allowed_participants
                                           }
                     
                     $('#create-discourse').html('Creating Discourse...');
@@ -494,15 +500,15 @@
             <form>
               <div class="form-group">
                 <label for="discourse-name" class="col-form-label">Discourse Name: </label>
-                <input type="text" class="form-control" id="discourse-name" required>
+                <input type="text" class="form-control" id="discourse-name" placeholder="The Sailor's Quest" required>
               </div>
               <div class="form-group">
                 <label for="discourse-description" class="col-form-label">Description (<span id="discourse-description-character-count">180</span> characters remaining): </label>
-                <textarea class="form-control" id="discourse-description"></textarea>
+                <textarea class="form-control" id="discourse-description" placeholder="Why? Because big boats."></textarea>
               </div>
               <div class="form-group">
                 <label for="discourse-tags" class="col-form-label">Tags (add at least one): </label>
-                <input type="text" class="form-control" id="discourse-tags" required>
+                <input type="text" class="form-control" id="discourse-tags" placeholder="#nautical #exploration #badpuns" required>
                 <h4 id="tag-field" class="mt-3"></h4>
               </div>
               <div class="btn-group" data-toggle="buttons">
@@ -513,7 +519,6 @@
                  <input type="radio" name="options" id="private-join" style="display:none;"> Private to Join as a Participant 
                 </label>
               </div>
-<!--              <label id="join-link" style="display: none;">Private Joining Link: <br><div class="container" style="background-color:rgba(0,0,0,0.025);"><span class="private-links mr-3" id="join-link-label" style="font-size:10.5px;"></span><button type="button" id="copy-join-link-button" class="btn btn-sm" onclick="$.fn.copy_join_link()"><img src="icons/clipboard-plus.svg" alt="" width="15" height="15" title="Bootstrap"></button></div></label>-->
                 
                 <div class="form-group" id="join-link" style="display: none;">
                     <label for="join-link-text">Private Join Link:</label>
@@ -537,7 +542,6 @@
                  <input type="radio" name="options" id="private-listen" style="display:none;"> Private to Join as a Listener 
                 </label>
               </div>
-<!--              <label id="listen-link" style="display: none;">Private Listening Link: <br><div class="container" style="background-color:rgba(0,0,0,0.025);"><span class="private-links mr-3" id="listen-link-label" style="font-size:10.5px;"></span><button type="button" id="copy-listen-link-button" class="btn btn-sm" onclick="$.fn.copy_listen_link()"><img src="icons/clipboard-plus.svg" alt="" width="15" height="15" title="Bootstrap"></button></div></label>-->
                 
                 <div class="form-group" id="listen-link" style="display: none;">
                     <label for="listen-link-text">Private Listen Link:</label>
@@ -553,6 +557,16 @@
                     </div>
                 </div>
                 
+                <div class="form-group">
+                    <label for="max-allowed-participants-select">Maximum Allowed Participants:</label>
+                    <select class="form-control" id="max-allowed-participants-select">
+                      <option>5</option>
+                      <option>10</option>
+                      <option selected="selected">15</option>
+                      <option>25</option>
+                      <option>100</option>
+                    </select>
+                </div>
             </form>
           </div>
           <div class="modal-footer">

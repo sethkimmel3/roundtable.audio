@@ -66,4 +66,4 @@ var change_UTCDateStrings_to_date_objects = async() => {
         }
     });
 }
-//change_UTCDateStrings_to_date_objects();
+change_UTCDateStrings_to_date_objects();

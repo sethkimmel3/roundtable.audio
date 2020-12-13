@@ -174,6 +174,7 @@
             
             var current_listeners = 0;
             var current_participants = 0;
+            var max_allowed_participants = 100;
             
             var auth_into_discourse_array = {
                 "UDI": UDI,
@@ -227,6 +228,9 @@
             
             $.fn.populateDiscourseContent = function(data, status){
                 $('#discourse-name').html(data['name']);
+                if(data['name'].length > 30){
+                    $('#discourse-name').css('font-size', '48px');
+                }
                 $('#discourse-description').html(data['description']);
                 var tag_string = '';
                 for(var i = 0; i < data['tags'].length; i++){
@@ -250,12 +254,11 @@
                     join_button.innerHTML = 'Join Discourse <img src="../icons/arrow-up-circle-white.svg" />';
                     document.getElementById('discourse-actions').appendChild(join_button);
                 }
-//                    var listen_button = document.createElement('button');
-//                    listen_button.type = 'button';
-//                    listen_button.className = 'btn btn-primary mr-1';
-//                    listen_button.onclick = function(){ $.fn.listenToDiscourse() }; 
-//                    listen_button.innerHTML = 'Listen to Discourse';
-//                    document.getElementById('discourse-actions').appendChild(listen_button);
+                
+                current_listeners = data['current_listeners'];
+                current_participants = data['current_participants'];
+                max_allowed_participants = data['max_allowed_participants'];
+                $.fn.validateAllowJoin();
                 
             }
             
@@ -325,17 +328,33 @@
                 }
             }
             
-            $.fn.toggleJoinButton = function(){
-                if($('#join-button').hasClass('btn-success')){
+            $.fn.toggleJoinButton = function(state){
+                if(state == 'participant'){
                     $('#join-button').removeClass('btn-success');
                     $('#join-button').addClass('btn-danger');
                     $('#join-button').html('Leave Discourse <img src="../icons/arrow-down-circle-white.svg" />');
                     $('#join-button').attr('onclick', '$.fn.leaveDiscourse()');
-                }else{
+                }else if(state == 'listener'){
                     $('#join-button').removeClass('btn-danger');
+                    $('#join-button').removeClass('btn-secondary');
                     $('#join-button').addClass('btn-success');
                     $('#join-button').html('Join Discourse <img src="../icons/arrow-up-circle-white.svg" />');
                     $('#join-button').attr('onclick', '$.fn.joinDiscourse()');
+                }else if(state == 'full'){
+                    $('#join-button').removeClass('btn-success');
+                    $('#join-button').addClass('btn-secondary');
+                    $('#join-button').html('Room is Full');
+                    $('#join-button').attr('onclick', ''); 
+                }
+            }
+            
+            $.fn.validateAllowJoin = function(){
+                if(document.getElementById('join-button') && connection_state != 'participant'){
+                    if(current_participants >= max_allowed_participants){
+                        $.fn.toggleJoinButton('full');
+                    }else if(current_participants < max_allowed_participants){
+                        $.fn.toggleJoinButton('listener');
+                    }
                 }
             }
             
@@ -355,10 +374,9 @@
                      socket.emit('connectToDiscourse', connection_data, function(err, data){
                          if(err == null){
                              connection_state = 'participant';
-                             // $.fn.updateListeners(data['current_listeners']);
+                             $.fn.toggleJoinButton('participant');
                          }
                      });
-                     $.fn.toggleJoinButton();
                      $('#micicon').css('display', 'block');
                 }
             }
@@ -376,10 +394,11 @@
                      socket.emit('connectToDiscourse', connection_data, function(err, data){
                          if(err == null){
                              connection_state = 'listener';
-                             //$.fn.updateListeners(data['current_listeners']);
+                             if(document.getElementById('join-button')){
+                                $.fn.toggleJoinButton('listener');
+                             }
                          }
                      });
-                    $.fn.toggleJoinButton();
             }
             
             $.fn.sendMessage = function(){
@@ -467,6 +486,7 @@
                     current_listeners -= 1;
                 }
                 $.fn.updateListeners(current_listeners);
+                $.fn.validateAllowJoin();
             });
             
             socket.on('removeSeat', function(remove_seat_data, handler){
@@ -495,7 +515,7 @@
       
     <img src="../icons/mic.svg" id="micicon" style="height:35px;width:auto;position:absolute;bottom:5px;right:5px;display:none;cursor:pointer;" onclick="$.fn.toggleUserMute()" data-muted="unmuted"/>  
       
-    <div id="chat-window" style="position: absolute; bottom: 35px; left: 35px; width: 350px; height: 280px;  overflow: hidden; border-radius: 15px 15px 15px 0px; margin: 0 auto; padding: 20px 20px; transition: .5s; display: inline-block; box-shadow: 0 10px 15px rgba(0,0,0,0.3); z-index:2">
+    <div id="chat-window" style="position: absolute; bottom: 35px; left: 35px; width: 350px; height: 280px;  overflow: hidden; border-radius: 15px 15px 15px 0px; margin: 0 auto; padding: 20px 20px; transition: .5s; display: inline-block; box-shadow: 0 10px 15px rgba(0,0,0,0.3); z-index:3; background-color: white; ">
       <div id="chat-messages" style="position:relative; bottom: 0px; width:350px; height: 200px; display: table-cell; vertical-align: bottom;">
         <div id="chat-messages-container" style="overflow-y: scroll; max-height:200px; min-width: 100%;">
         </div>

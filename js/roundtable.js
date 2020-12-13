@@ -218,7 +218,9 @@ $( document ).ready(function() {
 
     $.fn.addAudioPulse = function(id, value){
         var seat = seats.find(x => x.id === id);
-        seat["audioPulses"][0] = value;
+        if(seat != undefined){
+            seat["audioPulses"][0] = value;
+        }
     }
     
     $.fn.updateChatNotificationCount = function(listeners, id){
