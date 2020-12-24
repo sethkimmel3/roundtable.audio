@@ -267,9 +267,10 @@ io.on('connection', (socket) => {
                        }
                     }else if(connection_type == 'join' && connection_state == 'listener'){
                         if(res != null && res != "ERROR! More than one discourse with this UDI!" && (res[0]['current_participants'] < res[0]['max_allowed_participants'])){
-                            DBUtils.updateParticipantsAndListenersCount(UDI, connection_state, 'subtract');
+                            
                             connection_state = 'participant';
-                            DBUtils.updateParticipantsAndListenersCount(UDI, connection_state, 'add');
+                            
+                            //update the counts
                             var current_listeners = res[0]['current_listeners'] - 1;
                             var current_participants = res[0]['current_participants'] + 1;
                             var count_data = {
@@ -279,15 +280,19 @@ io.on('connection', (socket) => {
                             } 
                             io.sockets.in(res[0]['RID']).emit('updateDiscourseCount', count_data);
                             handler(null, count_data);
+                            
+                            DBUtils.updateParticipantsAndListenersCount(UDI, 'listener', 'subtract');
+                            DBUtils.updateParticipantsAndListenersCount(UDI, 'participant', 'add');
+                            
                         }
                         else if(res[0]['current_participants'] >= res[0]['max_allowed_participants']){
                            handler('room is full', null);
                         }
                     }else if(connection_type == 'listen' && connection_state == 'participant'){
                         if(res != null && res != "ERROR! More than one discourse with this UDI!"){
-                            DBUtils.updateParticipantsAndListenersCount(UDI, connection_state, 'subtract');
+                            
                             connection_state = 'listener';
-                            DBUtils.updateParticipantsAndListenersCount(UDI, connection_state, 'add');
+                            
                             var current_listeners = res[0]['current_listeners'] + 1;
                             var current_participants = res[0]['current_participants'] - 1;
                             var count_data = {
@@ -301,6 +306,10 @@ io.on('connection', (socket) => {
                             }
                             io.sockets.in(auth_creds[UDI]['RID']).emit('removeSeat', remove_seat_data);
                             handler(null, count_data);
+                            
+                            DBUtils.updateParticipantsAndListenersCount(UDI, 'participant', 'subtract');
+                            DBUtils.updateParticipantsAndListenersCount(UDI, 'listener', 'add');
+                            
                         }
                     }else{ 
                         handler('nothing to do', null);
