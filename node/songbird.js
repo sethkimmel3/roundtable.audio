@@ -136,8 +136,15 @@ cron.schedule('0,30 * * * * *', () =>{
 
 function newMention(tweet){
     try{
-//        console.log(tweet);
-        var tweettxt = tweet.text;
+        
+        console.log("new mentioned detected.");
+        
+        if(tweet.truncated == true){
+            var tweettxt = tweet.extended_tweet.full_text;
+        }else{
+            var tweettxt = tweet.text;   
+        }
+        
         if(tweettxt.includes('start a discourse')){
 
             var sender_name = tweet.user.screen_name;
@@ -151,7 +158,7 @@ function newMention(tweet){
                 var tweet_link = 'twitter.com/' + sender_name + '/status/' + tweet_id;
             }else{
                 var reply_to = original_tweet_in_reply_to;
-                var tweet_link = 'twitter.com/' + sender_name + '/status/' + tweet.in_reply_to_status_id_str;
+                var tweet_link = 'twitter.com/' + sender_name + '/status/' + original_tweet_in_reply_to;
             }
             
             var discourse_info_array = {

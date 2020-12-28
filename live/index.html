@@ -485,6 +485,10 @@
                 }else if(count_data['type'] == 'subtract_listener'){
                     current_listeners -= 1;
                 }
+                // FIX THIS SERVER SIDE
+                if(current_listeners < 0){
+                    current_listeners = 0;
+                }
                 $.fn.updateListeners(current_listeners);
                 $.fn.validateAllowJoin();
             });
