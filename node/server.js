@@ -58,7 +58,7 @@ io.on('connection', (socket) => {
             var user_id = reinstate_participant_data['user_id'];
             
             // do a mini-auth to make sure they're actually supposed to be allowed in
-            DBUtils.callfindDiscourseByUDIPromise(user_UDI).then(function(res){
+            DBUtils.callfindDiscourseByUDIPromise('', user_UDI).then(function(res){
                var to_return; 
                if(res != null && res != "ERROR! More than one discourse with this UDI!"){
                    var join_auth; 
@@ -171,7 +171,7 @@ io.on('connection', (socket) => {
             var user_JID_secret = auth_data['JID_secret'];
             var user_LID_secret = auth_data['LID_secret'];
             
-            DBUtils.callfindDiscourseByUDIPromise(user_UDI).then(function(res){
+            DBUtils.callfindDiscourseByUDIPromise('', user_UDI).then(function(res){
                var to_return; 
                if(res != null && res != "ERROR! More than one discourse with this UDI!"){
                    var join_auth; 
@@ -237,7 +237,7 @@ io.on('connection', (socket) => {
             }else if(connection_type == 'listen' && auth_creds[UDI]['listen_auth'] == false){
                 handler(null, 'not authorized');
             }else if((connection_type == 'join' && auth_creds[UDI]['join_auth'] == true ) || (connection_type == 'listen' && auth_creds[UDI]['join_auth'] == true )){
-                DBUtils.callfindDiscourseByUDIPromise(UDI).then(function(res){
+                DBUtils.callfindDiscourseByUDIPromise('', UDI).then(function(res){
                     if(connection_state == null){
                        if(res != null && res != "ERROR! More than one discourse with this UDI!" && (res[0]['current_participants'] < res[0]['max_allowed_participants'])){
                            socket.join(res[0]['RID']);
@@ -453,6 +453,48 @@ io.on('connection', (socket) => {
             handler(err, null);
         }
     });
+    
+    //for hackernews purposes
+    socket.on('createCommunityDiscourseIfNotExist', function(story_data, handler){
+        //this will check if a discourse exists for a given name and create one if not
+        try{
+            var story_name = story_data['story_name'];
+            var story_url = story_data['story_url'];
+            var community = story_data['community'];
+            var discourse_UDI = DBUtils.createDiscourseUDIFromName(story_name);
+            DBUtils.callfindDiscourseByUDIPromise('hackernews', discourse_UDI).then(function(res){
+                if(res == null){
+                    // create a new discourse
+                    var discourse_info_array = {
+                       "discourse-name": story_name,
+                       "discourse-description": story_url, 
+                       "discourse-tags": ['YC', 'hackernews'],
+                       "community": "hackernews",
+                       "join-visibility": 'public',
+                       "listen-visibility": 'public',
+                       "discourse_JID": null,
+                       "discourse_LID": null,
+                       "max-allowed-participants": 15
+                    }
+                    
+                   DBUtils.callCreateNewDiscoursePromise(discourse_info_array).then(function(res){
+                        console.log(res); 
+                        if("UDI" in res){
+                            handler(null, res["UDI"]);
+                        }else{
+                            handler(res, null);
+                        }
+                    })
+                }
+                else{
+                    handler(null, res[0]["UDI"]);
+                }
+            })
+        } catch(err){
+            console.log(err);
+            handler(err, null);
+        }
+    })
         
 });
 

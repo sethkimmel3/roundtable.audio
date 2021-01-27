@@ -24,6 +24,17 @@ function createSecretId(len){
     return result; 
 }
 
+function createDiscourseUDIFromName(discourse_name){
+    var discourse_UDI = discourse_name.replace(/[^\w\s]/gi, '').trim().replace(/ /g, '-').toLowerCase(); 
+    //if the last entry is an integer, this could cause collision issues
+    var splitList = discourse_UDI.split('-');
+    var lastEntry = splitList[splitList.length - 1];
+    if(isNaN(lastEntry) == false){
+        discourse_UDI += '-safe';
+    }
+    return discourse_UDI;
+}
+
 var uniqueUDIPromise = (discourse_UDI) => (
     new Promise((resolve, reject) => {
         var dbo = mongoUtil.getDb();
@@ -74,12 +85,21 @@ var callInsertRecordPromise = async (discourse_data) => {
     return result;
 }
 
-var findDiscourseByUDIPromise = (discourse_UDI) => (
+var findDiscourseByUDIPromise = (community, discourse_UDI) => (
     new Promise((resolve, reject) => {
         var dbo = mongoUtil.getDb();
-        var query = {
-            UDI: discourse_UDI,
-            end_datetime: null
+        if(community != ''){
+            var query = {
+                UDI: discourse_UDI,
+                community: community,
+                end_datetime: null
+            }
+        }
+        else{
+            var query = {
+                UDI: discourse_UDI,
+                end_datetime: null
+            }
         }
         dbo.collection("discourseList").find(query).toArray(function(e, res){ 
             if(e) throw e;
@@ -94,8 +114,8 @@ var findDiscourseByUDIPromise = (discourse_UDI) => (
     })
 )
 
-var callfindDiscourseByUDIPromise = async (discourse_UDI) => {
-    var result = await (findDiscourseByUDIPromise(discourse_UDI));
+var callfindDiscourseByUDIPromise = async (community, discourse_UDI) => {
+    var result = await (findDiscourseByUDIPromise(community, discourse_UDI));
     return result; 
 }
 
@@ -149,7 +169,7 @@ var callfindDiscourseByLIDPromise = async (discourse_LID) => {
 
 var updateParticipantsAndListenersCount = (UDI, type, operation) => {
     try{
-        callfindDiscourseByUDIPromise(UDI).then(function(res){
+        callfindDiscourseByUDIPromise('', UDI).then(function(res){
             var dbo = mongoUtil.getDb();
             var query = { UDI: UDI }
             if(type == 'participant'){
@@ -198,9 +218,14 @@ var createNewDiscoursePromise = (discourse_data) => (
                 var discourse_JID = discourse_data['discourse_JID'];
                 var discourse_LID = discourse_data['discourse_LID'];
                 var max_allowed_participants = discourse_data['max-allowed-participants'];
+                if("community" in discourse_data){
+                    var discourse_community = discourse_data['community'];
+                }else{
+                    var discourse_community = '';
+                }
 
                 var discourse_RID = uuidv4();
-                var discourse_UDI = discourse_name.replace(/[^\w\s]/gi, '').trim().replace(/ /g, '-').toLowerCase(); 
+                var discourse_UDI = createDiscourseUDIFromName(discourse_name);
 
                 // ensure that the promise for finding unique UDI resolved before attempting to insert data
                 callUniqueUDIPromise(discourse_UDI).then(function(result){
@@ -249,7 +274,8 @@ var createNewDiscoursePromise = (discourse_data) => (
                         current_listeners: discourse_current_listeners,
                         max_participants: discourse_max_participants,
                         max_listeners: discourse_max_listeners,
-                        max_allowed_participants: max_allowed_participants
+                        max_allowed_participants: max_allowed_participants,
+                        community: discourse_community
                      }
 
                     callInsertRecordPromise(discourse_data).then(function(result){
@@ -278,6 +304,7 @@ var callCreateNewDiscoursePromise = async (discourse_data) => {
 module.exports = {
     uuidv4,
     createSecretId,
+    createDiscourseUDIFromName,
     uniqueUDIPromise,
     callUniqueUDIPromise,
     insertRecordPromise,

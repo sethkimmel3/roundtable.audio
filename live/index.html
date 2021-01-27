@@ -231,7 +231,15 @@
                 if(data['name'].length > 30){
                     $('#discourse-name').css('font-size', '48px');
                 }
-                $('#discourse-description').html(data['description']);
+                const url_regex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g;
+                var matches = data['description'].match(url_regex);
+                if(matches != null){
+                    var first_url = matches[0];
+                    var replace_description = data['description'].replace(first_url, '<a href="' + first_url + '" target="_blank">' + first_url + '</a>');
+                }else{
+                    var replace_description = data['description'];
+                }
+                $('#discourse-description').html(replace_description);
                 var tag_string = '';
                 for(var i = 0; i < data['tags'].length; i++){
                     tag_string += '#' + data['tags'][i] + ' ';

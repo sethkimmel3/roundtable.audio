@@ -73,66 +73,66 @@ var post_tweet = (name, description, tags, public_join, public_listen, UDI) => {
         
 }
 
-cron.schedule('0,30 * * * * *', () =>{
-    try { 
-        var dbo = mongoUtil.getDb();
-        
-        var ongoing_public_query = {
-            end_datetime: {
-                $eq: null
-            },
-            public_listen: {
-                $eq: true
-            }
-        };
-        
-        var cursor = dbo.collection("discourseList").find(ongoing_public_query);
-        cursor.each(function(err,item){
-            if(item != null){
-                
-                // find if tweet already made
-                var _id = item['_id'];
-                var tweet_exists_query = {
-                    discourse_id: {
-                        $eq: _id
-                    }
-                }
-                
-                dbo.collection("discourseTweets").find(tweet_exists_query).count().then(function(numItems){
-                    if(numItems == 0){
-                        // tweet it
-                        var name = item['name'];
-                        var description = item['description'];
-                        var tags = item['tags'];
-                        var public_join = item['public_join'];
-                        var public_listen = item['public_listen'];
-                        var UDI = item['UDI'];
-                        
-                        var tweet_id = post_tweet(name, description, tags, public_join, public_listen, UDI);
-                        
-                        if(tweet_id != 'error'){
-                            //insert into discourseTweets collection 
-                            var to_insert = {
-                                'discourse_id': _id,
-                                'tweet_id': tweet_id
-                            }
-                            dbo.collection("discourseTweets").insertOne(to_insert, function(e, res){
-                                if(e) throw e;
-                                console.log('new tweet posted');
-                            });
-                        }  
-                    }
-                });
-                
-                
-            }
-        });
-        
-        console.log('\n');
-    } catch(error){
-        console.log(error);
-    }
-});
+//cron.schedule('0,30 * * * * *', () =>{
+//    try { 
+//        var dbo = mongoUtil.getDb();
+//        
+//        var ongoing_public_query = {
+//            end_datetime: {
+//                $eq: null
+//            },
+//            public_listen: {
+//                $eq: true
+//            }
+//        };
+//        
+//        var cursor = dbo.collection("discourseList").find(ongoing_public_query);
+//        cursor.each(function(err,item){
+//            if(item != null){
+//                
+//                // find if tweet already made
+//                var _id = item['_id'];
+//                var tweet_exists_query = {
+//                    discourse_id: {
+//                        $eq: _id
+//                    }
+//                }
+//                
+//                dbo.collection("discourseTweets").find(tweet_exists_query).count().then(function(numItems){
+//                    if(numItems == 0){
+//                        // tweet it
+//                        var name = item['name'];
+//                        var description = item['description'];
+//                        var tags = item['tags'];
+//                        var public_join = item['public_join'];
+//                        var public_listen = item['public_listen'];
+//                        var UDI = item['UDI'];
+//                        
+//                        var tweet_id = post_tweet(name, description, tags, public_join, public_listen, UDI);
+//                        
+//                        if(tweet_id != 'error'){
+//                            //insert into discourseTweets collection 
+//                            var to_insert = {
+//                                'discourse_id': _id,
+//                                'tweet_id': tweet_id
+//                            }
+//                            dbo.collection("discourseTweets").insertOne(to_insert, function(e, res){
+//                                if(e) throw e;
+//                                console.log('new tweet posted');
+//                            });
+//                        }  
+//                    }
+//                });
+//                
+//                
+//            }
+//        });
+//        
+//        console.log('\n');
+//    } catch(error){
+//        console.log(error);
+//    }
+//});
 
 function newMention(tweet){
     try{
@@ -145,7 +145,13 @@ function newMention(tweet){
             var tweettxt = tweet.text;   
         }
         
-        if(tweettxt.includes('start a discourse')){
+        if(tweet.hasOwnProperty('retweeted_status')){
+            var is_retweet = true;
+        }else{
+            var is_retweet = false;
+        }
+        
+        if(tweettxt.includes('start a discourse') && is_retweet == false){
 
             var sender_name = tweet.user.screen_name;
             var tweet_id = tweet.id_str;

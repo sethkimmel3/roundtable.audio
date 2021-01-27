@@ -72,7 +72,7 @@
             var isIncompatibleBrowser = $.fn.isIncompatibleBrowser();
             
             if(isIncompatibleBrowser){
-                $('#deviceBrowserAlertContainer').html('<div id="deviceBrowserAlert" class="alert alert-warning alert-dismissible fade show" role="alert"> <strong>Hold up!</strong> It looks like you may be using an incompatible device and browser. Discourse.fm will not work on iOS Chrome or iOS Firefox at the moment. For best results, we recommend using desktop Chrome. <button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">&times;</span></button></div>');
+                $('#deviceBrowserAlertContainer').html('<div id="deviceBrowserAlert" class="alert alert-warning alert-dismissible fade show" role="alert" style="margin: 0px;"> <strong>Hold up!</strong> It looks like you may be using an incompatible device and browser. Discourse.fm will not work on iOS Chrome or iOS Firefox at the moment. For best results, we recommend using desktop Chrome. <button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">&times;</span></button></div>');
             }
             
             new ClipboardJS('#join-link-button');
@@ -443,8 +443,11 @@
       </script>
   </head>
   <body>
-      
-    <div id="deviceBrowserAlertContainer" style="position:absolute;width:100%;"></div>
+    
+    <div id="alerts" style="position:absolute;width:100%;">
+    <div id="deviceBrowserAlertContainer"></div>
+    <div id="featureAlert"> <div id="featureAlert" class="alert alert-primary alert-dismissible fade show" role="alert" style="margin: 0px;"> <strong>New! </strong>Mention <a href="https://twitter.com/DiscourseFm" target="_blank">@DiscourseFm</a> anywhere on Twitter and include the words "start a discourse". We'll automatically reply with a link to a freshly-created discourse. <button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">&times;</span></button></div></div>
+    </div>
       
     <nav class="navbar fixed-bottom navbar-light" style="background-color: #6c757d; float:none; display: inline-block; text-align: center;">
         <a href="#" style="color:white" data-toggle="modal" data-target="#aboutModal">About</a>
