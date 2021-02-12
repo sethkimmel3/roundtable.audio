@@ -33,6 +33,7 @@ io.on('connection', (socket) => {
                     'type': 'subtract_participant'
                 }
                 DBUtils.updateParticipantsAndListenersCount(UDI, connection_state, 'subtract');
+                DBUtils.updateCurrentParticipantsArray(UDI, user_id, '', 'remove');
                 io.sockets.in(auth_creds[UDI]['RID']).emit('updateDiscourseCount', update_data);
                 var remove_seat_data = {
                     'user_id': user_id
@@ -213,7 +214,8 @@ io.on('connection', (socket) => {
                        "end_datetime": res[0]['end_datetime'],
                        "current_participants": res[0]['current_participants'],
                        "current_listeners": res[0]['current_listeners'],
-                       "max_allowed_participants": res[0]['max_allowed_participants']
+                       "max_allowed_participants": res[0]['max_allowed_participants'],
+                       "community": res[0]['community']
                    }
                }else{
                    //console.log(res);
@@ -231,6 +233,7 @@ io.on('connection', (socket) => {
         try { 
             var UDI = connection_data["UDI"];
             user_id = connection_data["user_id"];
+            var nickname = connection_data["nickname"];
             var connection_type = connection_data["connection_type"]; 
             if(connection_type == 'join' && auth_creds[UDI]['join_auth'] == false){
                 handler(null, 'not authorized');
@@ -247,6 +250,9 @@ io.on('connection', (socket) => {
                                connection_state = 'listener';
                            }
                            DBUtils.updateParticipantsAndListenersCount(UDI, connection_state, 'add');
+                           if(connection_state == 'participant'){
+                               DBUtils.updateCurrentParticipantsArray(UDI, user_id, nickname, 'add');
+                           }
                            if(connection_type == 'join'){
                                var current_listeners = res[0]['current_listeners'];
                                var current_participants = res[0]['current_participants'] + 1;
@@ -283,7 +289,7 @@ io.on('connection', (socket) => {
                             
                             DBUtils.updateParticipantsAndListenersCount(UDI, 'listener', 'subtract');
                             DBUtils.updateParticipantsAndListenersCount(UDI, 'participant', 'add');
-                            
+                            DBUtils.updateCurrentParticipantsArray(UDI, user_id, nickname, 'add');
                         }
                         else if(res[0]['current_participants'] >= res[0]['max_allowed_participants']){
                            handler('room is full', null);
@@ -309,7 +315,7 @@ io.on('connection', (socket) => {
                             
                             DBUtils.updateParticipantsAndListenersCount(UDI, 'participant', 'subtract');
                             DBUtils.updateParticipantsAndListenersCount(UDI, 'listener', 'add');
-                            
+                            DBUtils.updateCurrentParticipantsArray(UDI, user_id, '', 'remove');
                         }
                     }else{ 
                         handler('nothing to do', null);
@@ -454,12 +460,13 @@ io.on('connection', (socket) => {
         }
     });
     
-    //for hackernews purposes
+    //FOR HACKERNEWS PURPOSES
     socket.on('createCommunityDiscourseIfNotExist', function(story_data, handler){
         //this will check if a discourse exists for a given name and create one if not
         try{
             var story_name = story_data['story_name'];
             var story_url = story_data['story_url'];
+            var story_id = story_data['story_id'];
             var community = story_data['community'];
             var discourse_UDI = DBUtils.createDiscourseUDIFromName(story_name);
             DBUtils.callfindDiscourseByUDIPromise('hackernews', discourse_UDI).then(function(res){
@@ -474,11 +481,11 @@ io.on('connection', (socket) => {
                        "listen-visibility": 'public',
                        "discourse_JID": null,
                        "discourse_LID": null,
-                       "max-allowed-participants": 15
+                       "max-allowed-participants": 15,
+                       "metadata": {"story_id": story_id}
                     }
                     
                    DBUtils.callCreateNewDiscoursePromise(discourse_info_array).then(function(res){
-                        console.log(res); 
                         if("UDI" in res){
                             handler(null, res["UDI"]);
                         }else{
@@ -491,6 +498,85 @@ io.on('connection', (socket) => {
                 }
             })
         } catch(err){
+            console.log(err);
+            handler(err, null);
+        }
+    })
+    
+    socket.on('getStoriesParticipantsAndListeners', function(story_data, handler){
+        // get the current number of listeners and participants for the stories
+        try{
+            var stories = story_data['stories'];
+            var community = story_data['community']
+            var story_UDIs = [];
+            for(var i = 0; i < stories.length; i++){
+                if(stories[i] != null){
+                    story_UDIs[i] = DBUtils.createDiscourseUDIFromName(stories[i].title);
+                }
+            }
+            var dbo = mongoUtil.getDb();
+            var query = { UDI: {$in: story_UDIs}, community: community, end_datetime: null};
+            var story_counts = [];
+            
+            dbo.collection("discourseList").find(query).toArray(function(e, res){ 
+                for(var i = 0; i < story_UDIs.length; i++){ 
+                    var found = false; 
+                    for(var j = 0; j < res.length; j++){
+                        if(story_UDIs[i] == res[j]["UDI"]){
+                            found = true;
+                            if(res[j]['current_participants'] > 0){
+                                var nicknames = [];
+                                if("current_participants_array" in res[j] && res[j]['current_participants_array'] != null){
+                                    for (var k = 0; k < res[j]['current_participants_array'].length; k++){
+                                        nicknames.push(res[j]['current_participants_array'][k][1]);
+                                    }
+                                }
+                            }else{
+                                var nicknames = null;
+                            }
+                            story_counts[i] = {
+                                "started": true,
+                                "participants": res[j]['current_participants'],
+                                "listeners": res[j]['current_listeners'],
+                                "nicknames": nicknames
+                            }
+                        }
+                    }
+                    if(found == false){
+                        story_counts[i] = {
+                                "started": false,
+                                "participants": 0,
+                                "listeners": 0,
+                                "nicknames": null
+                        }
+                    }
+                    
+                    if(story_counts.length == stories.length){
+                        handler(null, story_counts);
+                    }
+                }
+            });
+        } catch(err){
+            console.log(err);
+            handler(err, null);
+        }
+    })
+    
+    socket.on('getMostActiveStories', function(info, handler){
+        try{
+            var community = info['community'];
+            var dbo = mongoUtil.getDb();
+            var query = {community: community, end_datetime: null};
+            var story_ids = [];
+            dbo.collection("discourseList").find(query).sort( {current_participants: -1} ).toArray(function(e, res){ 
+                for(var i = 0; i < res.length; i++){
+                    if("metadata" in res[i]){
+                        story_ids[i] = res[i]['metadata']['story_id'];
+                    }
+                }
+                handler(null, story_ids);
+            })
+        } catch (err){
             console.log(err);
             handler(err, null);
         }

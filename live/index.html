@@ -41,6 +41,13 @@
             var pathSplit = location.pathname.split('/');
             var UDI = pathSplit[pathSplit.length - 1];
             
+            var first_domain_name = window.location.hostname.replace('www.', '').split('.')[0];
+            if(first_domain_name != 'discourse'){
+                var community = first_domain_name;
+            }else{
+                var community = '';
+            }
+            
             var JID = null;
             var LID = null;
             var JID_secret = null;
@@ -92,6 +99,7 @@
             new ClipboardJS('#UDI-link-button');
             new ClipboardJS('#join-link-button');
             new ClipboardJS('#listen-link-button');
+            new ClipboardJS('#quiet-UDI-link-button');
             
             function uuidv4() {
                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -198,6 +206,13 @@
                                 window.location.href = window.location.href.split("/live")[0];
                             }else if(data['join_auth'] == false && data['listen_auth'] == true){
                                 // send request to begin listening via LID secret (server will allow regardless if LID secret is not necessary)
+                                if(data['community'] != community){
+                                    if(data['community'] == ''){
+                                        window.location.href = 'https://www.discourse.fm/live/' + UDI;
+                                    }else{
+                                         window.location.href = 'https://www.' + data['community'] + '.discourse.fm/live/' + UDI;
+                                    }
+                                }
                                 $.fn.listenToDiscourse();
                                 $.fn.populateShareLinks(data, 'listen');
                                 $.fn.populateDiscourseContent(data, 'listen');
@@ -209,6 +224,13 @@
                             }else if(data['join_auth'] == true && data['listen_auth'] == true){
                                 // send request to begin listening via LID secret (server will allow regardless if LID secret is not necessary)
                                 // send request to join discourse via JID secret (server will allow regardless if LID secret is not necessary)
+                                if(data['community'] != community){
+                                    if(data['community'] == ''){
+                                        window.location.href = 'https://www.discourse.fm/live/' + UDI;
+                                    }else{
+                                         window.location.href = 'https://www.' + data['community'] + '.discourse.fm/live/' + UDI;
+                                    }
+                                }
                                 $.fn.listenToDiscourse();
                                 $.fn.populateShareLinks(data, 'join');
                                 $.fn.populateDiscourseContent(data, 'join');
@@ -235,7 +257,7 @@
                 var matches = data['description'].match(url_regex);
                 if(matches != null){
                     var first_url = matches[0];
-                    var replace_description = data['description'].replace(first_url, '<a href="' + first_url + '" target="_blank">' + first_url + '</a>');
+                    var replace_description = data['description'].replace(first_url, '<a href="' + first_url + '" target="_blank">' + first_url + '</a><sup><img src="../icons/arrow-up-right-circle.svg" /></sup>');
                 }else{
                     var replace_description = data['description'];
                 }
@@ -245,9 +267,9 @@
                     tag_string += '#' + data['tags'][i] + ' ';
                 }
                 $('#discourse-tags').html(tag_string);
-                $('#discourse-start-time').html(data['start_datetime']);
-                $('#discourse-participants').html(data['current_participants']);
-                $('#discourse-listeners').html(data['current_listeners']);
+//                $('#discourse-start-time').html(data['start_datetime']);
+//                $('#discourse-participants').html(data['current_participants']);
+//                $('#discourse-listeners').html(data['current_listeners']);
                 $.fn.updateListeners(data['current_listeners']);
                 
                 if(status == 'ended'){
@@ -268,6 +290,19 @@
                 max_allowed_participants = data['max_allowed_participants'];
                 $.fn.validateAllowJoin();
                 
+                if(data['current_participants'] == 0 && community == 'hackernews'){
+                    if(first_url != null){
+                        $('#quiet-item-link').attr('href', first_url);
+                        $('#quiet-item-link').html(first_url);
+                    }
+                    $('#quiet-UDI-link-text').val(window.location.href);
+                    setTimeout($.fn.showQuietModal, 3000);
+                }
+            }
+            
+            
+            $.fn.showQuietModal = function(){
+                $('#quietModal').modal('show')
             }
             
             $.fn.populateShareLinks = function(data, status){
@@ -377,7 +412,8 @@
                      var connection_data = {
                          "UDI": UDI,
                          "user_id": user_id,
-                         "connection_type": "join"
+                         "connection_type": "join",
+                         "nickname": nickname 
                      }
                      socket.emit('connectToDiscourse', connection_data, function(err, data){
                          if(err == null){
@@ -515,6 +551,15 @@
             
       </script>
   </head>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-8HXLM8XEYN"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-8HXLM8XEYN');
+    </script>
   <body>
       
     <a href="../" style="position:absolute;top:5px;left:5px;">
@@ -564,6 +609,30 @@
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
             <button type="button" class="btn btn-primary" onclick="$.fn.setNickName()" id="enter-discourse">Enter Discourse</button>
+          </div>
+        </div>
+      </div>
+    </div>
+      
+    <div class="modal" id="quietModal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-body">
+              <h3>It's awfully quiet in here... </h3>
+              <p>Share the link to the comments in <a id="quiet-item-link" href="#" target="_blank">#</a> or elsewhere on the internet to bring others into the conversation. </p>
+            <div class="input-group mb-3">
+                <!-- Target -->
+                <input id="quiet-UDI-link-text" class="form-control" name="UDI-link-text" onclick="this.select()" readonly>
+                <!-- Trigger -->
+                    <div class="input-group-append">
+                        <button class="btn btn-outline" id="quiet-UDI-link-button" type="button" data-clipboard-target="#quiet-UDI-link-text" style="border-color:#ced4da" onclick="$.fn.show_link_tooltip('quiet-UDI');">
+                            <img src="../icons/clipboard-plus.svg" alt="Copy to clipboard">
+                        </button>
+                    </div>
+                </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
           </div>
         </div>
       </div>

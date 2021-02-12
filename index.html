@@ -441,6 +441,15 @@
         });
             
       </script>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-8HXLM8XEYN"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-8HXLM8XEYN');
+    </script>
   </head>
   <body>
     
@@ -472,8 +481,10 @@
             
             <h3>Live, broadcasted audio chat rooms to <span id="textchanger">learn something new.</span></h3>
             <h5>
-                <span id="find_public_discourses" style="color:#007bff; cursor: pointer;">Find a public discourse</span>, or 
-                <span id="new_discourse" style="color:#28a745;cursor: pointer;" data-toggle="modal" data-target="#newDiscourseModal"> start a new one</span>.</h5>
+                <span id="find_public_discourses" style="color:#007bff; cursor: pointer;">Find a public discourse</span>, 
+                <span id="new_discourse" style="color:#28a745;cursor: pointer;" data-toggle="modal" data-target="#newDiscourseModal"> start a new one</span>, or
+                <span id="browse_communities" style="color:#ffc107;cursor: pointer;" data-toggle="modal" data-target="#browseCommunitiesModal"> browse our communities.</span>
+            </h5>
             <br>
             <p id="noPublicDiscourses" style="display:none">There are no public discourses to display right now - start a new discourse to get the conversation going!</p>
             <div class="card-columns" id="discourseCards">
@@ -580,6 +591,24 @@
       </div>
     </div>
       
+    <div class="modal fade" id="browseCommunitiesModal" tabindex="-1" aria-labelledby="newDiscourseModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="newDiscourseModalLabel">Our Communities</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+              Recently, we launched the ability to use discourse.fm to launch audio-first communities. Our first experimental demo of this feature is <a href="https://hackernews.discourse.fm">hackernews.discourse.fm</a>, which pulls stories live from <a href="news.ycombinator.com" target="_blank">Y Combinator's Hacker News</a>. 
+              <br><br>
+              If you're interested in setting up an audio-first community using discourse.fm - or simply integrating live audio into your product or service - <a href="mailto:info@discourse.fm">let us know.</a>
+            </div>
+          </div>
+        </div>
+    </div>
+      
     <div class="modal fade" id="aboutModal" tabindex="-1" aria-labelledby="aboutModalLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -592,7 +621,7 @@
             <div class="modal-body">
                 <p>Since ancient times, humans have relied on spoken language to collaborate, organize, and connect with one another. But in recent times, much of our meaningful dialogue has been locked away in written text on the internet - taking the form of email, social media posts, comment sections, and instant messages. And even when we do speak online, it's often controlled or moderated by one individual or organization. In many ways, we've lost our ability to simply speak with one another at all, causing unprecented political divide and a decline in social relationships.
                 <br><br>
-                Discourse.fm is meant to be the simplest decentralized conversation tool on the internet. We don't expect to fix the entirety of the above problem, but we want to provide a tool that can at least <i>get the conversation going</i> again. 
+                Discourse.fm is meant to be the simplest decentralized conversation tool on the internet. We don't expect to fix the entirety of the above problem, but we want to provide a tool that can at least get the conversation going. 
                 <br><br>    
                 To get started, simply create or join a discourse and let your voice be heard. Or to understand more of what you can do with Discourse.fm, head over to the <a onclick="$.fn.closeModalOpenModal('#aboutModal', '#FAQModal');" href="#">FAQ</a> section. 
                 <br><br>
@@ -616,7 +645,7 @@
                 <h3>What is Discourse.fm?</h3>
                 <p>A platform for live, decentralized, broadcasted audio conferencing.</p>
                 <h3>What can I do with it?</h3>
-                <p>Quite a bit. Like a podcast, you can use it as a stage for dialogue. Like a radio station, you can use it to project a message to a wide audience. However discourses can be private, meaning they can be used for closed hangouts, meetings, and much more.</p>
+                <p>Quite a bit. Like a podcast, you can use it as a stage for dialogue. Like a radio station, you can use it to project a message to a wide audience. Discourses can also be private, meaning they can be used for closed hangouts, meetings, and much more.</p>
                 <h3>What is the distinction between a public and private discourse?</h3>
                 <p>A discourse can be: </p>
                     <ul>
@@ -692,7 +721,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                We've got big plans for Discourse.fm. If you'd like to stay updated on our progress <a href="https://twitter.com/DiscourseFm">follow us on Twitter</a>. 
+                We've got big plans for discourse.fm. If you'd like to stay updated on our progress <a href="https://twitter.com/DiscourseFm" target="_blank">follow us on Twitter</a>. 
             </div>
         </div>
       </div> 

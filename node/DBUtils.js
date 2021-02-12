@@ -171,7 +171,7 @@ var updateParticipantsAndListenersCount = (UDI, type, operation) => {
     try{
         callfindDiscourseByUDIPromise('', UDI).then(function(res){
             var dbo = mongoUtil.getDb();
-            var query = { UDI: UDI }
+            var query = { UDI: UDI, end_datetime: null };
             if(type == 'participant'){
                 var current_participants = res[0]['current_participants'];
                 var max_participants = res[0]['max_participants'];
@@ -207,6 +207,54 @@ var updateParticipantsAndListenersCount = (UDI, type, operation) => {
     }
 }
 
+var updateCurrentParticipantsArray = (UDI, user_id, nickname, operation) => {
+    try{
+        callfindDiscourseByUDIPromise('', UDI).then(function(res){
+            if(res != null && res != "ERROR! More than one discourse with this UDI!"){
+                var currentParticipantsArray = res[0]['current_participants_array']; 
+                if(operation == 'add'){
+                    var newParticipant = [user_id, nickname];
+                    if(Array.isArray(currentParticipantsArray) == false){
+                        currentParticipantsArray = [];
+                    }
+                    var found = false;
+                    for(var i = 0; i < currentParticipantsArray.length; i++){
+                        if(currentParticipantsArray[i][0] == user_id){
+                            found = true;
+                        }
+                    }
+                    if(found == false){
+                        currentParticipantsArray.push(newParticipant);
+                    }
+                }else {
+                    var removeIndex = -1;
+                    for(var i = 0; i < currentParticipantsArray.length; i++){
+                        if(currentParticipantsArray[i][0] == user_id){
+                            removeIndex = i;
+                        }
+                    }
+                    if(removeIndex != -1){
+                        currentParticipantsArray.splice(removeIndex, 1);
+                    }else{
+                        console.log("Participant not found");
+                    }
+                }
+                
+                console.log(currentParticipantsArray);
+                var dbo = mongoUtil.getDb();
+                var query = { UDI: UDI, end_datetime:null };
+                var update = { $set:{ current_participants_array: currentParticipantsArray} };
+                dbo.collection("discourseList").updateOne(query, update, function(e, res){
+                    if(e) throw e;
+                });
+            }
+        })
+    }
+    catch( error ){
+        console.log(error);
+    }
+}
+
 var createNewDiscoursePromise = (discourse_data) => (
         new Promise((resolve, reject) => {
             try{
@@ -222,6 +270,11 @@ var createNewDiscoursePromise = (discourse_data) => (
                     var discourse_community = discourse_data['community'];
                 }else{
                     var discourse_community = '';
+                }
+                if("metadata" in discourse_data){
+                    var metadata = discourse_data['metadata'];
+                }else{
+                    var metadata = '';
                 }
 
                 var discourse_RID = uuidv4();
@@ -275,7 +328,9 @@ var createNewDiscoursePromise = (discourse_data) => (
                         max_participants: discourse_max_participants,
                         max_listeners: discourse_max_listeners,
                         max_allowed_participants: max_allowed_participants,
-                        community: discourse_community
+                        community: discourse_community,
+                        metadata: metadata,
+                        current_participants_array: []
                      }
 
                     callInsertRecordPromise(discourse_data).then(function(result){
@@ -316,6 +371,7 @@ module.exports = {
     findDiscourseByLIDPromise,
     callfindDiscourseByLIDPromise,
     updateParticipantsAndListenersCount,
+    updateCurrentParticipantsArray,
     createNewDiscoursePromise,
     callCreateNewDiscoursePromise
 }
