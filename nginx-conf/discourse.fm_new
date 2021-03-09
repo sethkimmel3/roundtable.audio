@@ -1,0 +1,18 @@
+server {
+        listen 80;
+        listen [::]:80;
+
+        root /var/www/html;
+        index index.html index.htm index.nginx-debian.html;
+
+        server_name discourse.fm discourse.fm;
+
+        location / {
+                try_files $uri $uri/index.html =404;
+        }
+
+        location ~ /.well-known/acme-challenge {
+                allow all;
+                root /var/www/html;
+        }
+}

@@ -1,0 +1,134 @@
+server {
+  server_name discourse.fm www.discourse.fm;
+  root /var/www/discourse.fm/html;
+  index index.html index.htm index.nginx-debian.html;
+
+  charset utf-8;
+
+  location ~* \.(js|css|ico|png|xml|svg|webmanifest)$ {
+    try_files $uri =404;
+  }
+
+  location / {
+    try_files /index.html =404;
+  }
+
+  location ~ ^[\/]live[\/](.*)$ {
+    try_files /live/index.html $uri/ =404;
+  }
+
+  if ($host = discourse.fm) {
+	return 301 https://www.$host$request_uri;
+  }
+
+  location ~ ^/(node|socket\.io) {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+   }
+
+    listen [::]:443 ssl ipv6only=on; # managed by Certbot
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/discourse.fm/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/discourse.fm/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+
+}
+
+server {
+
+    if ($host = www.discourse.fm) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    if ($host = discourse.fm) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot    
+
+  listen 80;
+  listen [::]:80;
+  server_name discourse.fm www.discourse.fm;
+    return 404; # managed by Certbot
+
+}
+server {
+  server_name rpc.discourse.fm;
+
+  location / {
+    proxy_set_header Host $host;
+    proxy_pass http://127.0.0.1:7000;
+  }
+
+    listen [::]:443 ssl; # managed by Certbot
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/rpc.discourse.fm/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/rpc.discourse.fm/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+}
+
+server {
+    if ($host = rpc.discourse.fm) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+  listen 80;
+  listen [::]:80;
+  server_name rpc.discourse.fm;
+    return 404; # managed by Certbot
+
+}
+
+server {
+
+  root /var/www/discourse.fm/html;
+  index index.html index.htm index.nginx-debian.html;
+  
+  server_name hackernews.discourse.fm www.hackernews.discourse.fm;
+  
+  location / {
+    try_files /communities/hackernews/index.html $uri/ =404;
+  }
+
+  location /js/ {
+    proxy_pass https://discourse.fm/js/;
+  }
+  
+  location /icons/ {
+    proxy_pass https://discourse.fm/icons/;
+  }
+
+  location ~ ^[\/]live[\/](.*)$ {
+    try_files /live/index.html $uri/ =404;
+  }  
+
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/hackernews.discourse.fm/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/hackernews.discourse.fm/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+} 
+
+
+server {
+    if ($host = hackernews.discourse.fm) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+  listen 80;
+  
+  server_name hackernews.discourse.fm www.hackernews.discourse.fm;
+    return 404; # managed by Certbot
+
+
+}

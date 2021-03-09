@@ -1,0 +1,58 @@
+version: '3'
+
+services:
+  nodejs:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: nodejs
+    container_name: nodejs
+    restart: unless-stopped
+    networks: 
+     - app-network    
+
+  webserver:
+    image: nginx:mainline-alpine
+    container_name: webserver
+    restart: unless-stopped
+    volumes:
+     - web-root:/var/www/html
+     - ./nginx-conf:/etc/nginx/conf.d
+     - certbot-etc:/etc/letsencrypt
+     - certbot-var:/var/lib/letsencrpyt
+    ports:
+     - "80:80"
+    depends_on:
+     - nodejs 
+    networks:
+     - app-network
+
+  kraken: 
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: nodejs
+    container_name: nodejs
+    restart: unless-stopped
+    networks:
+     - app-network  
+
+volumes:
+  certbot-etc:
+  certbot-var:
+  web-root:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./website/
+      o: bind
+  dhparam:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./dhparam/
+      o: bind
+
+networks:
+  app-network:
+    driver: bridge

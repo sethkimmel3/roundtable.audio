@@ -212,29 +212,37 @@
 <!--    <div id="featureAlert"> <div id="featureAlert" class="alert alert-primary alert-dismissible fade show" role="alert" style="margin: 0px;"> <strong>New! </strong>Mention <a href="https://twitter.com/DiscourseFm" target="_blank">@DiscourseFm</a> anywhere on Twitter and include the words "start a discourse". We'll automatically reply with a link to a freshly-created discourse. <button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">&times;</span></button></div></div>-->
     </div>
       
-    <nav class="navbar navbar-light" style="position:relative; background-color: #ff6600; float:none; display: inline-block; width: 100%; text-align: left;">
-            <a href="https://news.ycombinator.com/" style="color:black;text-decoration: none; cursor:pointer">
-                <span><b>Hacker News</b></span>  
-            </a>
-            <a href="https://discourse.fm" style="color:black;text-decoration: none; cursor:pointer">
-                <span style="color:white;"><b>Discourse</b></span> |
-            </a>
-            <a href="#" style="color:black;" onclick="$.fn.getStories('top')">Top</a>
-            <span style="">|</span> 
-            <a href="#" style="color:black;" onclick="$.fn.getStories('new');">New</a>
-            <span style="">|</span>
-            <a href="#" style="color:black;" onclick="$.fn.getStories('ask');">Ask</a>
-            <span style="">|</span>
-            <a href="#" style="color:black;" onclick="$.fn.getMostActiveStories();">Most Active</a>
-            <span style="">|</span>
-            <a href="#" style="color:black;" data-toggle="modal" data-target="#aboutModal"><b>About</b></a>
-            <span style="">|</span>
-            <a href="#" style="color:black;" data-toggle="modal" data-target="#howToUseModal"><b>How to Use</b></a>
-            &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;
-            <span>Want to create your own audio-first community? <a href="mailto:info@discourse.fm">Let us know!</a></span>
+    <nav class="navbar navbar-light" style="position:relative; background-color: #ff6600; float:none; width: 100%; text-align: left;">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <a href="https://news.ycombinator.com/" style="color:black;text-decoration: none; cursor:pointer">
+                    <span><b>Hacker News</b></span>  
+                </a>
+                <a href="https://discourse.fm" style="color:black;text-decoration: none; cursor:pointer">
+                    <span style="color:white;"><b>Discourse.FM<sup>*</sup></b></span> |
+                </a>
+                <a href="#" style="color:black;" onclick="$.fn.getStories('top')">Top</a>
+                <span style="">|</span> 
+                <a href="#" style="color:black;" onclick="$.fn.getStories('new');">New</a>
+                <span style="">|</span>
+                <a href="#" style="color:black;" onclick="$.fn.getStories('ask');">Ask</a>
+                <span style="">|</span>
+                <a href="#" style="color:black;" onclick="$.fn.getMostActiveStories();">Most Active Discourses</a>
+                <span style="">|</span>
+                <a href="#" style="color:black;" data-toggle="modal" data-target="#aboutModal"><b>About</b></a>
+                <span style="">|</span>
+                <a href="#" style="color:black;" data-toggle="modal" data-target="#howToUseModal"><b>How to Use</b></a>
+            </li>
+        </ul>
+        <ul class="navbar-nav float-right">
+            <li>
+                <span><i>Want to create your own audio-first community? </i><a href="mailto:info@discourse.fm">Let us know!</a></span>
+            </li>
+        </ul>
     </nav>
-      
-    <div id="stories" style="position:relative; background-color: #f6f6f0; height: 100%; width:100%; padding: 15px;"></div> 
+    <p style="position:relative; background-color: #f6f6f0; font-size: 11px; height: 100%; width:100%; padding: 15px; padding-top: 5px; padding-bottom: 15px;margin-bottom: 0px;"><sup>*</sup>To avoid confusion with <a href="https://www.discourse.org/" target="_blank">discourse.org</a>, we'll be changing our name soon. <a href="https://twitter.com/DiscourseFm" target="_blank">Follow us on Twitter</a> for updates on this.</p>
+<!--    <p style="position:relative; background-color: #f6f6f0; font-size: 14px; height: 100%; width:100%; padding: 15px; padding-top: 0px; padding-bottom: 15px;margin-bottom: 0px;">Nothing catching your eye? Try joining the <a href="#">community lobby</a> instead.</p>-->
+    <div id="stories" style="position:relative; background-color: #f6f6f0; height: 100%; width:100%; padding: 15px;padding-top: 0px;"></div> 
       
       
       
