@@ -1,0 +1,17 @@
+[engine]
+# the network interface to bind
+interface = "eth0"
+# the IP address to bind, empty allows the engine to get it from interface
+address = ""
+log-level = 10
+# the UDP port range, leave them to 0 for default strategy
+port-min = 0
+port-max = 0
+
+[turn]
+host = "turn:turn.kraken.fm:443"
+# must be identical to coturn static auth secret
+secret = "812ecb0604d9b90c4aa43a0e3fd1ba85"
+
+[rpc]
+port = 7000
