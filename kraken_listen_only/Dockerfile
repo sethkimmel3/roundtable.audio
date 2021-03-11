@@ -9,12 +9,16 @@ RUN cd $GOPATH/src/kraken && go mod download
   
 COPY . $GOPATH/src/kraken
 
-RUN cd $GOPATH/src/kraken && go build  
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /build .
 
-RUN cp config/engine.example.toml config/engine.toml
+FROM alpine:3.12.1
+
+RUN apk --no-cache add ca-certificates
+COPY --from=0 /build /usr/local/bin/build
+
+COPY config/engine.example.toml /config/engine.toml
 
 EXPOSE 7000
 
-RUN ./kraken -c config/engine.toml -s engine
-
-
+ENTRYPOINT ["/usr/local/bin/build"]
+CMD ["-c", "/config/engine.toml", "-s", "engine"]

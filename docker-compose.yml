@@ -3,7 +3,7 @@ version: '3'
 services:
   nodejs:
     build:
-      context: ./backend
+      context: ./backend/
       dockerfile: Dockerfile
     image: nodejs
     container_name: nodejs
@@ -18,8 +18,8 @@ services:
     volumes:
      - web-root:/var/www/html
      - ./nginx-conf:/etc/nginx/conf.d
-     - certbot-etc:/etc/letsencrypt
-     - certbot-var:/var/lib/letsencrpyt
+#     - certbot-etc:/etc/letsencrypt
+#     - certbot-var:/var/lib/letsencrpyt
     ports:
      - "80:80"
     depends_on:
@@ -27,31 +27,50 @@ services:
     networks:
      - app-network
 
-  kraken: 
+  coturn: 
     build:
-      context: ./backend
+      context: ./coturn/
       dockerfile: Dockerfile
-    image: nodejs
-    container_name: nodejs
+    image: coturn
+    container_name: coturn
     restart: unless-stopped
     networks:
      - app-network  
+    ports:
+     - "3478:3478"
+     - "10000-20000:10000-20000/udp"
+     
+  kraken_listen_only: 
+    build:
+      context: ./kraken_listen_only/
+      dockerfile: Dockerfile
+    image: kraken_listen_only
+    container_name: kraken_listen_only
+#    volumes: 
+#     - "./kraken_listen_only/config:./config"
+    ports:
+     - "7000:7000"
+    restart: unless-stopped
+    networks:
+     - app-network  
+    depends_on:
+     - coturn
 
 volumes:
-  certbot-etc:
-  certbot-var:
+#  certbot-etc:
+#  certbot-var:
   web-root:
     driver: local
     driver_opts:
       type: none
-      device: ./website/
+      device: ./client-code/
       o: bind
-  dhparam:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./dhparam/
-      o: bind
+#  dhparam:
+#    driver: local
+#    driver_opts:
+#      type: none
+#      device: ./dhparam/
+#      o: bind
 
 networks:
   app-network:
