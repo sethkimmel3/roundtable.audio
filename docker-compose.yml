@@ -22,8 +22,8 @@ services:
 #     - certbot-var:/var/lib/letsencrpyt
     ports:
      - "80:80"
-    depends_on:
-     - nodejs 
+#    depends_on:
+#     - nodejs 
     networks:
      - app-network
 
@@ -38,7 +38,7 @@ services:
      - app-network  
     ports:
      - "3478:3478"
-     - "10000-20000:10000-20000/udp"
+     - "19995-20000:19995-20000/udp"
      
   kraken_listen_only: 
     build:
