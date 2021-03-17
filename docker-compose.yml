@@ -18,12 +18,14 @@ services:
     volumes:
      - web-root:/var/www/html
      - ./nginx-conf:/etc/nginx/conf.d
-#     - certbot-etc:/etc/letsencrypt
-#     - certbot-var:/var/lib/letsencrpyt
+     - certbot-etc:/etc/letsencrypt
+     - certbot-var:/var/lib/letsencrpyt
+     - dhparam:/etc/ssl/certs
     ports:
      - "80:80"
-#    depends_on:
-#     - nodejs 
+     - "443:443"
+    depends_on:
+     - nodejs 
     networks:
      - app-network
 
@@ -56,21 +58,32 @@ services:
     depends_on:
      - coturn
 
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+     - certbot-etc:/etc/letsencrypt
+     - certbot-var:/var/lib/letsencrypt
+     - web-root:/var/www/html
+    depends_on:
+      - webserver
+    command: certonly --webroot --webroot-path=/var/www/html --email seth.kimmel3@gmail.com --agree-tos --no-eff-email --force-renewal -d roundtable.audio -d www.roundtable.audio
+
 volumes:
-#  certbot-etc:
-#  certbot-var:
+  certbot-etc:
+  certbot-var:
   web-root:
     driver: local
     driver_opts:
       type: none
       device: ./client-code/
       o: bind
-#  dhparam:
-#    driver: local
-#    driver_opts:
-#      type: none
-#      device: ./dhparam/
-#      o: bind
+  dhparam:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/seth/discourse.fm/dhparam/
+      o: bind
 
 networks:
   app-network:
