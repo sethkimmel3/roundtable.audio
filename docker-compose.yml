@@ -8,6 +8,8 @@ services:
     image: nodejs
     container_name: nodejs
     restart: unless-stopped
+    ports:
+     - "3000:3000"
     networks: 
      - app-network    
 

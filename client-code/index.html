@@ -60,10 +60,12 @@
       <script src="js/clipboard/dist/clipboard.min.js"></script>
       <script>
         $( document ).ready(function() {
-            //var socket = io.connect("http://127.0.0.1:3000");
-            var socket = io.connect("https://www.discourse.fm");
-            //var socket = io.connect("/"); 
-
+            //connection to node server
+            const node_conn = 'nodejs://nodejs:3000';
+            var socket = io.connect(node_conn);
+            
+            // var socket = io.connect("https://www.discourse.fm");
+            
             // Add a connect listener
             socket.on('connect',function() {
                console.log('Client has connected to the server!');
