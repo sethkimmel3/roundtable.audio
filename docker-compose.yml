@@ -11,7 +11,20 @@ services:
     ports:
      - "3000:3000"
     networks: 
-     - app-network    
+     - app-network
+    volumes: 
+     - ./backend/:/home/node/app
+     - node_modules:/home/node/app/node_modules
+    command: ./wait-for.sh db:27017 -- /home/node/app/node_modules/.bin/nodemon server.js    
+
+  db:
+    image: mongo:4.1.8-xenial
+    container_name: db
+    restart: unless-stopped
+    volumes:
+     - dbdata:/data/db
+    networks:
+     - app-network
 
   webserver:
     image: nginx:mainline-alpine
@@ -86,6 +99,8 @@ volumes:
       type: none
       device: /home/seth/discourse.fm/dhparam/
       o: bind
+  dbdata:
+  node_modules:
 
 networks:
   app-network:

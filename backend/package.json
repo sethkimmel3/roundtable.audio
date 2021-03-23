@@ -9,5 +9,8 @@
         "node-fetch": "^2.6.1",
         "socket.io": "^2.3.0",
         "twit": "^2.2.11"
+    },
+    "devDependencies": {
+        "nodemon": "^1.18.10"
     }
 }
