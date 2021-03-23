@@ -1,7 +1,9 @@
 //window.onload = function() {
 //const KRAKEN_API = 'https://rpc.discourse.fm';
-const KRAKEN_API = 'http://localhost:7000';
-const TURNSERVER = 'turn:104.131.28.192:5349';
+const KRAKEN_API = 'https://roundtable.audio/kraken_listen_only/';
+const TURNSERVER = 'https://roundtable.audio/coturn/';
+//const KRAKEN_API = 'http://localhost:7000'; 
+//const TURNSERVER = 'turn:104.131.28.192:5349';
 const fetch = require("node-fetch");
 
 obj = {

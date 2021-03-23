@@ -581,38 +581,38 @@ io.on('connection', (socket) => {
 });
 
 // every six hours this will end discourses that either have no active participants and have been active for more than 3 hours, or have been active for more than 24 hours (in case of a bug in tracking number of participants)
-//cron.schedule('* * 0,6,12,18 * * *', () =>{
-//    try { 
-//        var dbo = mongoUtil.getDb();
-//        var query = { end_datetime: null };
-//        var to_end = [];
-//        dbo.collection("discourseList").find(query).toArray(function(e, res){ 
-//            if(e) throw e;
-//            var now = Date.now();
-//            for(var i = 0; i < res.length; i++){
-//                var UDI = res[i]['UDI'];
-//                var start_datetime = Date.parse(res[i]['start_datetime']);
-//                var days_elapsed = (now - start_datetime)/86400000;
-//                var current_participants = res[i]['current_participants'];
-//                if((current_participants == 0 && days_elapsed >= 0.125) || days_elapsed >= 1.0){
-//                    to_end.push(UDI);
-//                }
-//            }
+cron.schedule('* * 0,6,12,18 * * *', () =>{
+    try { 
+        var dbo = mongoUtil.getDb();
+        var query = { end_datetime: null };
+        var to_end = [];
+        dbo.collection("discourseList").find(query).toArray(function(e, res){ 
+            if(e) throw e;
+            var now = Date.now();
+            for(var i = 0; i < res.length; i++){
+                var UDI = res[i]['UDI'];
+                var start_datetime = Date.parse(res[i]['start_datetime']);
+                var days_elapsed = (now - start_datetime)/86400000;
+                var current_participants = res[i]['current_participants'];
+                if((current_participants == 0 && days_elapsed >= 0.125) || days_elapsed >= 1.0){
+                    to_end.push(UDI);
+                }
+            }
 
-//            var end_time = new Date();
-//            if(to_end.length > 0){
-//                var query = { UDI: { $in: to_end } };
-//               var update = { $set: {end_datetime: end_time } };
-//                dbo.collection("discourseList").updateMany(query, update, function(err, result){
-//                    if(err) throw err;
-//                    console.log("Automatically ended the following discourses: " + to_end.toString())
-//                });
-//            }
-//        });
-//    } catch(error){
-//        console.log(error);
-//    }
-//});
+            var end_time = new Date();
+            if(to_end.length > 0){
+                var query = { UDI: { $in: to_end } };
+                var update = { $set: {end_datetime: end_time } };
+                dbo.collection("discourseList").updateMany(query, update, function(err, result){
+                    if(err) throw err;
+                      console.log("Automatically ended the following discourses: " + to_end.toString())
+                    });
+              }
+          });
+      } catch(error){
+          console.log(error);
+      }
+});
 
 port = 3000;
 //hostname = 'localhost';

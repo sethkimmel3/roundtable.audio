@@ -27,8 +27,9 @@
       <script>
         $( document ).ready(function() {
             //var socket = io.connect("http://127.0.0.1:3000");
-            var socket = io.connect("https://www.discourse.fm"); 
-            
+            //var socket = io.connect("https://www.discourse.fm"); 
+	    var socket = io.connect("https://roundtable.audio");            
+
             var connection_state = null;
             
             //get user id, or set if doesn't exist
@@ -42,7 +43,7 @@
             var UDI = pathSplit[pathSplit.length - 1];
             
             var first_domain_name = window.location.hostname.replace('www.', '').split('.')[0];
-            if(first_domain_name != 'discourse'){
+            if(first_domain_name != 'roundtable'){
                 var community = first_domain_name;
             }else{
                 var community = '';
@@ -208,9 +209,9 @@
                                 // send request to begin listening via LID secret (server will allow regardless if LID secret is not necessary)
                                 if(data['community'] != community){
                                     if(data['community'] == ''){
-                                        window.location.href = 'https://www.discourse.fm/live/' + UDI;
+                                        window.location.href = 'https://www.roundtable.audio/live/' + UDI;
                                     }else{
-                                         window.location.href = 'https://www.' + data['community'] + '.discourse.fm/live/' + UDI;
+                                         window.location.href = 'https://www.' + data['community'] + '.roundtable.audio/live/' + UDI;
                                     }
                                 }
                                 $.fn.listenToDiscourse();
@@ -226,9 +227,9 @@
                                 // send request to join discourse via JID secret (server will allow regardless if LID secret is not necessary)
                                 if(data['community'] != community){
                                     if(data['community'] == ''){
-                                        window.location.href = 'https://www.discourse.fm/live/' + UDI;
+                                        window.location.href = 'https://www.roundtable.audio/live/' + UDI;
                                     }else{
-                                         window.location.href = 'https://www.' + data['community'] + '.discourse.fm/live/' + UDI;
+                                         window.location.href = 'https://www.' + data['community'] + '.roundtable.audio/live/' + UDI;
                                     }
                                 }
                                 $.fn.listenToDiscourse();
