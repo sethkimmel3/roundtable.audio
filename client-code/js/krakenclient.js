@@ -1,4 +1,4 @@
-const TURNSERVER = 'turn:104.131.28.192:5349';
+const TURNSERVER = 'turn:coturn:3478';
 
 const constraints = {
     audio: true,
@@ -18,7 +18,6 @@ const configuration = {
 
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 const audioCtx = new AudioContext();
-    
 
 var ucid = "";
 var participant_ids = [];
@@ -30,7 +29,7 @@ function uuidv4() {
       return v.toString(16);
     });
   }
-    
+
 async function subscribe_client(UDI, unameRPC, socket) {
     var subscribe_data = {
         "UDI": UDI,
@@ -38,7 +37,7 @@ async function subscribe_client(UDI, unameRPC, socket) {
         "ucid": ucid
     }
     socket.emit('subscribe', subscribe_data, async function(err, res){
-       console.log(res);
+	console.log(res);
         if (res.error && typeof res.error === 'string' && res.error.indexOf(unameRPC + ' not found in')) {
           pc.close();
           await client_start();
@@ -55,22 +54,22 @@ async function subscribe_client(UDI, unameRPC, socket) {
               "ucid": ucid,
               "sdp": JSON.stringify(sdp)
           }
-          
+
           socket.emit('answer', answer_data, function(err, res){
-              console.log('answer'); 
+              console.log('answer');
               //handle error
           });
         }
         if(unameRPC == current_subscribe_unameRPC){
             setTimeout(function () {
               subscribe_client(UDI, unameRPC, socket);
-            }, 3000); 
+            }, 3000);
         }
     });
-  } 
+  }
 
 
-var pc; 
+var pc;
 var user_stream;
 var user_muted;
 
@@ -103,28 +102,31 @@ async function publish_client(UDI, unameRPC, user_id, socket){
         console.error(err);
         return;
       }
-    
+
     user_stream.getTracks().forEach((track) => {
         pc.addTrack(track, user_stream);
     });
     user_muted = false;
-    
+
     await pc.setLocalDescription(await pc.createOffer());
-    
+
     var publish_data = {
         'UDI': UDI,
         'unameRPC': unameRPC,
         'localDescription': JSON.stringify(pc.localDescription)
     }
+    
     socket.emit('publish', publish_data, async function(err, res){
-        if (res.data && res.data.sdp.type === 'answer') {
+	console.log(err);
+	console.log(res);
+	if (res.data && res.data.sdp.type === 'answer') {
             await pc.setRemoteDescription(res.data.sdp);
             ucid = res.data.track;
-            current_subscribe_unameRPC = unameRPC; 
+            current_subscribe_unameRPC = unameRPC;
             subscribe_client(UDI, unameRPC, socket);
-        }                                       
+        }
     });
-    
+
     create_analyser(user_id, user_stream);
 }
 
@@ -137,6 +139,7 @@ async function register_listen_only_peer_client(UDI, socket){
         'unameRPC': unameRPC,
         'localDescription': JSON.stringify(pc.localDescription)
     }
+    console.log(register_listen_only_peer_data); 
     socket.emit('registerListenOnlyPeer', register_listen_only_peer_data, async function(err, res){
        console.log(res);
        if (res.data && res.data.sdp.type === 'answer') {
@@ -144,10 +147,10 @@ async function register_listen_only_peer_client(UDI, socket){
             ucid = res.data.track;
             current_subscribe_unameRPC = unameRPC;
             subscribe_client(UDI, unameRPC, socket);
-       } 
+       }
     });
 }
-    
+
 async function start_client(client_type, UDI, unameRPC, user_id, socket) {
     try {
       if(client_type == 'listen_only'){
@@ -155,8 +158,8 @@ async function start_client(client_type, UDI, unameRPC, user_id, socket) {
           unameRPC = encodeURIComponent(uname);
           user_id = uuidv4();
           ucid = "";
-      } 
-     
+      }
+
 // CHECK THIS OUT LATER
 //      var turn_data = {
 //          'unameRPC': unameRPC
@@ -168,12 +171,13 @@ async function start_client(client_type, UDI, unameRPC, user_id, socket) {
 //          } else {
 //            configuration.iceServers = [];
 //            configuration.iceTransportPolicy = 'all';
-//          }        
+//          }
 //      });
-        
+
       pc = new RTCPeerConnection(configuration);
       pc.createDataChannel('useless'); // FIXME remove this line
       pc.onicecandidate = ({candidate}) => {
+	console.log("trickle");
         var trickle_data = {
             'UDI': UDI,
             'unameRPC': unameRPC,
@@ -196,33 +200,32 @@ async function start_client(client_type, UDI, unameRPC, user_id, socket) {
         if (id === user_id) {
           return;
         }
-        
+
         //prevent "phantom" users from showing up in roundtable
         var uname_history = localStorage.getItem(UDI + ':' + 'uname_history');
         if(uname_history && uname_history != null){
             var uname_history_array = JSON.parse(uname_history);
-            var index = uname_history_array.indexOf(sid); 
+            var index = uname_history_array.indexOf(sid);
             if(index != -1){
                 return;
             }
         }
-        
+
         var index = participant_ids.indexOf(id);
         if(index == - 1 && name != ''){
-            $.fn.addSeat(name, id, false); 
+            $.fn.addSeat(name, id, false);
             create_analyser(id, stream);
-        } 
-        
+        }
+
         event.track.onmute = (event) => {
           console.log("onmute", event);
-            
+
           $.fn.removeSeat(id);
           var index = participant_ids.indexOf(id);
           if(index > - 1){
               participant_ids.splice(index, 1);
           }
         };
-          
 
         var aid = 'peer-audio-'+id;
         var el = document.getElementById(aid);
@@ -242,7 +245,7 @@ async function start_client(client_type, UDI, unameRPC, user_id, socket) {
     } catch (err) {
       console.error(err);
     }
-  }   
+  }
 
 function create_analyser(id, stream){
     var analyser = audioCtx.createAnalyser();
@@ -258,16 +261,16 @@ function create_analyser(id, stream){
 function track_speaking(id, analyser){
     var bufferLength = analyser.frequencyBinCount;
     var dataArray = new Uint8Array(bufferLength);
-    var threshold = 10.0; 
+    var threshold = 10.0;
     var total;
     var i;
     var average;
     function update(){
         analyser.getByteFrequencyData(dataArray);
         total = 0;                               // initialize to 0
-        i = 0; 
+        i = 0;
         while(i < dataArray.length) total += dataArray[i++];   // add all
-        average = dataArray.length ? total / dataArray.length : 0; 
+        average = dataArray.length ? total / dataArray.length : 0;
         $.fn.addAudioPulse(id, average);
         if (participant_ids.includes(id)) {
         setTimeout(function () {
@@ -275,6 +278,6 @@ function track_speaking(id, analyser){
            }, 100);
         }
     }
-    
+
     update();
 }

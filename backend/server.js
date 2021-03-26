@@ -20,8 +20,8 @@ io.on('connection', (socket) => {
     var auth_creds = {};
     var connection_state = null;
     var user_id;
-    
-    socket.on('disconnecting', (reason) => {  
+
+    socket.on('disconnecting', (reason) => {
         if(Object.keys(auth_creds).length > 0){
             for(var UDI in auth_creds) break;
             if(connection_state == 'participant'){
@@ -42,25 +42,29 @@ io.on('connection', (socket) => {
                 DBUtils.updateParticipantsAndListenersCount(UDI, connection_state, 'subtract');
                 io.sockets.in(auth_creds[UDI]['RID']).emit('updateDiscourseCount', update_data);
             }
-        } 
+        }
     });
-    
+
     socket.on('disconnect', (reason) => {
         console.log('user disconnected due to: ' + reason);
     });
-    
+
     socket.on('reinstate_participant', function(reinstate_participant_data, handler){
         try{
-            var UDI = reinstate_participant_data['UDI'];
+            var user_UDI = reinstate_participant_data['UDI'];
             var user_id = reinstate_participant_data['user_id'];
-            
+	    var user_JID = reinstate_participant_data['JID'];
+	    var user_LID = reinstate_participant_data['LID'];
+	    var user_JID_secret = reinstate_participant_data['user_JID_secret'];
+	    var user_LID_secret = reinstate_participant_data['user_LID_secret'];
+
             // do a mini-auth to make sure they're actually supposed to be allowed in
             DBUtils.callfindDiscourseByUDIPromise('', user_UDI).then(function(res){
-               var to_return; 
+               var to_return;
                if(res != null && res != "ERROR! More than one discourse with this UDI!"){
-                   var join_auth; 
+                   var join_auth;
                    var listen_auth;
-                   
+
                    if(res[0]['JID'] == null){
                        join_auth = true;
                    }else if(res[0]['JID'] != null && user_JID == res[0]['JID'] && user_JID_secret == res[0]['JID_secret']){
@@ -68,7 +72,7 @@ io.on('connection', (socket) => {
                    }else if(res[0]['JID'] != null && (user_JID != res[0]['JID'] || user_JID_secret != res[0]['JID_secret'])){
                        join_auth = false;
                    }
-                   
+
                    if(res['LID'] == null){
                        listen_auth = true;
                    }else if(res[0]['LID'] != null && user_LID == res[0]['LID'] && user_LID_secret == res[0]['LID_secret']){
@@ -76,19 +80,19 @@ io.on('connection', (socket) => {
                    }else if(res[0]['LID'] != null && (user_LID != res[0]['LID'] || user_LID_secret != res[0]['LID_secret'])){
                        listen_auth = false;
                    }
-                   
-                   auth_creds[UDI] = {
+
+                   auth_creds[user_UDI] = {
                        'RID': RID,
                        'join_auth': join_auth,
                        'listen_auth': listen_auth
                    }
-                   
+
                    var RID = res[0]['RID'];
-                   
+
                    if(join_auth == true){
                        connection_state = 'participant';
                        socket.join(RID);
-                        
+
                        var reinstate_participant_data = {
                            "user_id": user_id
                        }
@@ -102,10 +106,10 @@ io.on('connection', (socket) => {
             console.log(error);
         }
     });
-    
+
     socket.on('create_discourse', function(discourse_data, handler){
         DBUtils.callCreateNewDiscoursePromise(discourse_data).then(function(res){
-            console.log(res); 
+            console.log(res);
             if("UDI" in res){
                 handler(null, res);
             }else{
@@ -113,7 +117,7 @@ io.on('connection', (socket) => {
             }
         })
     });
-    
+
     socket.on('get_auth_creds_from_jid', function(auth_jid, handler){
        try{
            DBUtils.callfindDiscourseByJIDPromise(auth_jid).then(function(res){
@@ -125,7 +129,7 @@ io.on('connection', (socket) => {
                        "JID_secret": res[0]['JID_secret'],
                        "LID": res[0]['LID'],
                        "LID_secret": res[0]['LID_secret']
-                   }   
+                   }
                    handler(null, return_data);
                }else{
                    //console.log(res);
@@ -136,7 +140,7 @@ io.on('connection', (socket) => {
            handler(error, null);
        }
     });
-    
+
     socket.on('get_auth_creds_from_lid', function(auth_lid, handler){
        try{
            DBUtils.callfindDiscourseByLIDPromise(auth_lid).then(function(res){
@@ -146,7 +150,7 @@ io.on('connection', (socket) => {
                        "UDI": res[0]['UDI'],
                        "LID": res[0]['LID'],
                        "LID_secret": res[0]['LID_secret']
-                   }   
+                   }
                    handler(null, return_data);
                }else{
                    //console.log(res);
@@ -157,9 +161,9 @@ io.on('connection', (socket) => {
            handler(error, null);
        }
     });
-    
+
     socket.on('auth_into_discourse', function(auth_data, handler){
-        
+
         try{
             console.log('Auth attempt.');
             var user_UDI = auth_data['UDI'];
@@ -167,13 +171,13 @@ io.on('connection', (socket) => {
             var user_LID = auth_data['LID'];
             var user_JID_secret = auth_data['JID_secret'];
             var user_LID_secret = auth_data['LID_secret'];
-            
+
             DBUtils.callfindDiscourseByUDIPromise('', user_UDI).then(function(res){
-               var to_return; 
+               var to_return;
                if(res != null && res != "ERROR! More than one discourse with this UDI!"){
-                   var join_auth; 
+                   var join_auth;
                    var listen_auth;
-                   
+
                    if(res[0]['JID'] == null){
                        join_auth = true;
                    }else if(res[0]['JID'] != null && user_JID == res[0]['JID'] && user_JID_secret == res[0]['JID_secret']){
@@ -181,7 +185,7 @@ io.on('connection', (socket) => {
                    }else if(res[0]['JID'] != null && (user_JID != res[0]['JID'] || user_JID_secret != res[0]['JID_secret'])){
                        join_auth = false;
                    }
-                   
+
                    if(res['LID'] == null){
                        listen_auth = true;
                    }else if(res[0]['LID'] != null && user_LID == res[0]['LID'] && user_LID_secret == res[0]['LID_secret']){
@@ -189,15 +193,15 @@ io.on('connection', (socket) => {
                    }else if(res[0]['LID'] != null && (user_LID != res[0]['LID'] || user_LID_secret != res[0]['LID_secret'])){
                        listen_auth = false;
                    }
-                   
+
                    var RID = res[0]['RID'];
-                   
+
                    auth_creds[user_UDI] = {
                        'RID': RID,
                        'join_auth': join_auth,
                        'listen_auth': listen_auth
                    }
-                   
+
                    to_return = {
                        "name": res[0]['name'],
                        "description": res[0]['description'],
@@ -215,22 +219,22 @@ io.on('connection', (socket) => {
                    }
                }else{
                    //console.log(res);
-                   to_return = null; 
+                   to_return = null;
                }
                handler(null, to_return);
             });
-            
+
         } catch(error){
             handler(error, null);
         }
     });
-    
+
     socket.on('connectToDiscourse', function(connection_data, handler){
-        try { 
+        try {
             var UDI = connection_data["UDI"];
             user_id = connection_data["user_id"];
             var nickname = connection_data["nickname"];
-            var connection_type = connection_data["connection_type"]; 
+            var connection_type = connection_data["connection_type"];
             if(connection_type == 'join' && auth_creds[UDI]['join_auth'] == false){
                 handler(null, 'not authorized');
             }else if(connection_type == 'listen' && auth_creds[UDI]['listen_auth'] == false){
@@ -260,7 +264,7 @@ io.on('connection', (socket) => {
                                'type': 'values',
                                'current_listeners': current_listeners,
                                'current_participants': current_participants
-                           }  
+                           }
                            io.sockets.in(res[0]['RID']).emit('updateDiscourseCount', count_data);
                            handler(null, count_data);
                        }
@@ -269,9 +273,9 @@ io.on('connection', (socket) => {
                        }
                     }else if(connection_type == 'join' && connection_state == 'listener'){
                         if(res != null && res != "ERROR! More than one discourse with this UDI!" && (res[0]['current_participants'] < res[0]['max_allowed_participants'])){
-                            
+
                             connection_state = 'participant';
-                            
+
                             //update the counts
                             var current_listeners = res[0]['current_listeners'] - 1;
                             var current_participants = res[0]['current_participants'] + 1;
@@ -279,10 +283,10 @@ io.on('connection', (socket) => {
                                 'type': 'values',
                                 'current_listeners': current_listeners,
                                 'current_participants': current_participants
-                            } 
+                            }
                             io.sockets.in(res[0]['RID']).emit('updateDiscourseCount', count_data);
                             handler(null, count_data);
-                            
+
                             DBUtils.updateParticipantsAndListenersCount(UDI, 'listener', 'subtract');
                             DBUtils.updateParticipantsAndListenersCount(UDI, 'participant', 'add');
                             DBUtils.updateCurrentParticipantsArray(UDI, user_id, nickname, 'add');
@@ -292,9 +296,9 @@ io.on('connection', (socket) => {
                         }
                     }else if(connection_type == 'listen' && connection_state == 'participant'){
                         if(res != null && res != "ERROR! More than one discourse with this UDI!"){
-                            
+
                             connection_state = 'listener';
-                            
+
                             var current_listeners = res[0]['current_listeners'] + 1;
                             var current_participants = res[0]['current_participants'] - 1;
                             var count_data = {
@@ -308,12 +312,12 @@ io.on('connection', (socket) => {
                             }
                             io.sockets.in(auth_creds[UDI]['RID']).emit('removeSeat', remove_seat_data);
                             handler(null, count_data);
-                            
+
                             DBUtils.updateParticipantsAndListenersCount(UDI, 'participant', 'subtract');
                             DBUtils.updateParticipantsAndListenersCount(UDI, 'listener', 'add');
                             DBUtils.updateCurrentParticipantsArray(UDI, user_id, '', 'remove');
                         }
-                    }else{ 
+                    }else{
                         handler('nothing to do', null);
                     }
                 });
@@ -324,7 +328,7 @@ io.on('connection', (socket) => {
             handler(error, null);
         }
     });
-    
+
     socket.on('clientMessage', function(message_data, handler){
         try{
             if(Object.keys(auth_creds).length > 0){
@@ -336,18 +340,18 @@ io.on('connection', (socket) => {
             handler(error, null);
         }
     });
-    
+
     socket.on('turn', function(turn_data, handler){
        try{
            var unameRPC = turn_data['unameRPC'];
            var res = krakenAPI.turn(unameRPC).then(function(result){
-                handler(null, result);   
+                handler(null, result);
            });
        } catch(error){
            handler(error, null);
        }
     });
-    
+
     socket.on('trickle', function(trickle_data, handler){
         try {
             var UDI = trickle_data['UDI'];
@@ -363,9 +367,9 @@ io.on('connection', (socket) => {
             handler(error, null);
         }
     });
-    
+
     socket.on('publish', function(publish_data, handler){
-        try {
+	 try {
             var UDI = publish_data['UDI'];
             if(auth_creds[UDI]['join_auth'] == true && auth_creds[UDI]['listen_auth'] == true){
                 var rnameRPC = encodeURIComponent(auth_creds[UDI]['RID']);
@@ -373,8 +377,8 @@ io.on('connection', (socket) => {
                 var localDescription = publish_data['localDescription'];
 
                 krakenAPI.publish(rnameRPC, unameRPC, localDescription).then(function(result){
-                    //console.log(result);
-                    handler('null', result); 
+                    console.log(result);
+                    handler('null', result);
                 });
             }else{
                 handler('null', 'join not permitted');
@@ -383,7 +387,7 @@ io.on('connection', (socket) => {
             handler(error, null);
         }
     });
-    
+
     socket.on('subscribe', function(subscribe_data, handler){
         try {
             var UDI = subscribe_data['UDI'];
@@ -403,7 +407,7 @@ io.on('connection', (socket) => {
             handler(error, null);
         }
     });
-    
+
     socket.on('answer', function(answer_data, handler){
         try {
             var UDI = answer_data['UDI'];
@@ -421,8 +425,7 @@ io.on('connection', (socket) => {
             handler(error, null);
         }
     });
-    
-    
+
     socket.on('registerListenOnlyPeer', function(register_listen_only_peer_data, handler){
         try {
             var UDI = register_listen_only_peer_data['UDI'];
@@ -442,9 +445,9 @@ io.on('connection', (socket) => {
             handler(error, null);
         }
     });
-    
+
     socket.on('getActiveDiscourses', function(data, handler){
-        try { 
+        try {
             var dbo = mongoUtil.getDb();
             var query = { end_datetime: null, public_listen:true };
             var exclude = {JID:0, JID_secret:0, LID:0, LID_secret:0, RID:0, max_participants:0, max_listeners:0, _id:0};
@@ -455,7 +458,7 @@ io.on('connection', (socket) => {
             handler(err, null);
         }
     });
-    
+
     //FOR HACKERNEWS PURPOSES
     socket.on('createCommunityDiscourseIfNotExist', function(story_data, handler){
         //this will check if a discourse exists for a given name and create one if not
@@ -470,7 +473,7 @@ io.on('connection', (socket) => {
                     // create a new discourse
                     var discourse_info_array = {
                        "discourse-name": story_name,
-                       "discourse-description": story_url, 
+                       "discourse-description": story_url,
                        "discourse-tags": ['YC', 'hackernews'],
                        "community": "hackernews",
                        "join-visibility": 'public',
@@ -480,7 +483,7 @@ io.on('connection', (socket) => {
                        "max-allowed-participants": 15,
                        "metadata": {"story_id": story_id}
                     }
-                    
+
                    DBUtils.callCreateNewDiscoursePromise(discourse_info_array).then(function(res){
                         if("UDI" in res){
                             handler(null, res["UDI"]);
@@ -498,7 +501,7 @@ io.on('connection', (socket) => {
             handler(err, null);
         }
     })
-    
+
     socket.on('getStoriesParticipantsAndListeners', function(story_data, handler){
         // get the current number of listeners and participants for the stories
         try{
@@ -513,10 +516,10 @@ io.on('connection', (socket) => {
             var dbo = mongoUtil.getDb();
             var query = { UDI: {$in: story_UDIs}, community: community, end_datetime: null};
             var story_counts = [];
-            
-            dbo.collection("discourseList").find(query).toArray(function(e, res){ 
-                for(var i = 0; i < story_UDIs.length; i++){ 
-                    var found = false; 
+
+            dbo.collection("discourseList").find(query).toArray(function(e, res){
+                for(var i = 0; i < story_UDIs.length; i++){
+                    var found = false;
                     for(var j = 0; j < res.length; j++){
                         if(story_UDIs[i] == res[j]["UDI"]){
                             found = true;
@@ -546,7 +549,7 @@ io.on('connection', (socket) => {
                                 "nicknames": null
                         }
                     }
-                    
+
                     if(story_counts.length == stories.length){
                         handler(null, story_counts);
                     }
@@ -557,14 +560,14 @@ io.on('connection', (socket) => {
             handler(err, null);
         }
     })
-    
+
     socket.on('getMostActiveStories', function(info, handler){
         try{
             var community = info['community'];
             var dbo = mongoUtil.getDb();
             var query = {community: community, end_datetime: null};
             var story_ids = [];
-            dbo.collection("discourseList").find(query).sort( {current_participants: -1} ).toArray(function(e, res){ 
+            dbo.collection("discourseList").find(query).sort( {current_participants: -1} ).toArray(function(e, res){
                 for(var i = 0; i < res.length; i++){
                     if("metadata" in res[i]){
                         story_ids[i] = res[i]['metadata']['story_id'];
@@ -577,16 +580,16 @@ io.on('connection', (socket) => {
             handler(err, null);
         }
     })
-        
+
 });
 
 // every six hours this will end discourses that either have no active participants and have been active for more than 3 hours, or have been active for more than 24 hours (in case of a bug in tracking number of participants)
 cron.schedule('* * 0,6,12,18 * * *', () =>{
-    try { 
+    try {
         var dbo = mongoUtil.getDb();
         var query = { end_datetime: null };
         var to_end = [];
-        dbo.collection("discourseList").find(query).toArray(function(e, res){ 
+        dbo.collection("discourseList").find(query).toArray(function(e, res){
             if(e) throw e;
             var now = Date.now();
             for(var i = 0; i < res.length; i++){

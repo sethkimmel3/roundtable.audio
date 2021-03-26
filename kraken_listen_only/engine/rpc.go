@@ -339,7 +339,7 @@ func (r *R) parseId(params []interface{}) ([]string, error) {
 
 func registerHandlers(router *httptreemux.TreeMux) {
 	router.MethodNotAllowedHandler = func(w http.ResponseWriter, r *http.Request, _ map[string]httptreemux.HandlerFunc) {
-		render.New().JSON(w, http.StatusNotFound, map[string]interface{}{"error": "not found"})
+		render.New().JSON(w, http.StatusNotFound, map[string]interface{}{"error": "method is not allowed"})
 	}
 	router.NotFoundHandler = func(w http.ResponseWriter, r *http.Request) {
 		render.New().JSON(w, http.StatusNotFound, map[string]interface{}{"error": "not found"})

@@ -13,7 +13,7 @@ ENV TURN_REALM roundtable.audio
 ADD start_coturn.sh start_coturn.sh
 RUN chmod +x start_coturn.sh
 
-EXPOSE 3478/upd
+EXPOSE 3478/udp
 EXPOSE 3478/tcp
 
 CMD ["./start_coturn.sh"]

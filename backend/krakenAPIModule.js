@@ -1,9 +1,7 @@
 //window.onload = function() {
 //const KRAKEN_API = 'https://rpc.discourse.fm';
-const KRAKEN_API = 'https://roundtable.audio/kraken_listen_only/';
-const TURNSERVER = 'https://roundtable.audio/coturn/';
-//const KRAKEN_API = 'http://localhost:7000'; 
-//const TURNSERVER = 'turn:104.131.28.192:5349';
+const KRAKEN_API = 'http://kraken_listen_only:7000';
+//const KRAKEN_API = 'http://localhost:7000';
 const fetch = require("node-fetch");
 
 obj = {
@@ -27,10 +25,10 @@ obj = {
             redirect: 'follow', // manual, *follow, error
             referrerPolicy: 'no-referrer', // no-referrer, *client
             body: JSON.stringify({id: obj.uuidv4(), method: method, params: params}) // body data type must match "Content-Type" header
-          });
+          })
           return response.json(); // parses JSON response into native JavaScript objects
         } catch (err) {
-          // console.log('fetch error', method, params, err);
+          console.log('fetch error', method, params, err);
           return await obj.rpc(method, params);
         }
       } ,
@@ -38,37 +36,37 @@ obj = {
     turn: async function(unameRPC) {
         var res = await obj.rpc('turn', [unameRPC]);
         //console.log(res);
-        return res; 
-    } , 
-    
+        return res;
+    } ,
+
     trickle: async function(rnameRPC, unameRPC, ucid, candidate) {
         await obj.rpc('trickle', [rnameRPC, unameRPC, ucid, candidate]);
-    } , 
-    
+    } ,
+
     answer: async function(rnameRPC, unameRPC, ucid, sdp) {
         await obj.rpc('answer', [rnameRPC, unameRPC, ucid, sdp]);
-    } , 
-    
+    } ,
+
     subscribe: async function(rnameRPC, unameRPC, ucid) {
         var res = await obj.rpc('subscribe', [rnameRPC, unameRPC, ucid]);
         return res;
-    } , 
+    } ,
 
     publish: async function(rnameRPC, unameRPC, localDescription){
         var res = await obj.rpc('publish', [rnameRPC, unameRPC, localDescription]);
 //        if (res.data && res.data.sdp.type === 'answer') {
 //            ucid = res.data.track;
 //        }
-        return res; 
-    } , 
-    
+        return res;
+    } ,
+
     registerListenOnlyPeer: async function(rnameRPC, unameRPC, localDescription){
         var res = await obj.rpc('registerListenOnlyPeer', [rnameRPC, unameRPC, localDescription]);
 //        if (res.data && res.data.sdp.type === 'answer') {
 //            ucid = res.data.track;
 //        }
         return res;
-    } 
+    }
 }
 
 module.exports = obj;
