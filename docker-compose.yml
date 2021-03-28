@@ -45,17 +45,15 @@ services:
      - app-network
 
   coturn: 
-    build:
-      context: ./coturn/
-      dockerfile: Dockerfile
-    image: coturn
+    image: 'instrumentisto/coturn'
     container_name: coturn
     restart: unless-stopped
     networks:
      - app-network  
     ports:
-     - "3478:3478"
-     - "19995-20000:19995-20000/udp"
+     - "3478:3478/udp" 
+    volumes:
+     - ./coturn/turnserver.conf:/etc/coturn/turnserver.conf
      
   kraken_listen_only: 
     build:

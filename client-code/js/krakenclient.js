@@ -1,4 +1,4 @@
-const TURNSERVER = 'turn:coturn:3478';
+const TURNSERVER = 'turn:128.199.3.231:3478';
 
 const constraints = {
     audio: true,
@@ -115,7 +115,7 @@ async function publish_client(UDI, unameRPC, user_id, socket){
         'unameRPC': unameRPC,
         'localDescription': JSON.stringify(pc.localDescription)
     }
-    
+
     socket.emit('publish', publish_data, async function(err, res){
 	console.log(err);
 	console.log(res);
@@ -139,7 +139,6 @@ async function register_listen_only_peer_client(UDI, socket){
         'unameRPC': unameRPC,
         'localDescription': JSON.stringify(pc.localDescription)
     }
-    console.log(register_listen_only_peer_data); 
     socket.emit('registerListenOnlyPeer', register_listen_only_peer_data, async function(err, res){
        console.log(res);
        if (res.data && res.data.sdp.type === 'answer') {
@@ -177,7 +176,7 @@ async function start_client(client_type, UDI, unameRPC, user_id, socket) {
       pc = new RTCPeerConnection(configuration);
       pc.createDataChannel('useless'); // FIXME remove this line
       pc.onicecandidate = ({candidate}) => {
-	console.log("trickle");
+	console.log(pc);
         var trickle_data = {
             'UDI': UDI,
             'unameRPC': unameRPC,
