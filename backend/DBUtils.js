@@ -1,12 +1,12 @@
 var mongo = require('mongodb');
 var mongoUtil = require('./MongoConnection.js');
 
-//connect to discourseListDatabase on Startup
-mongoUtil.connectToServer("discourseListDatabase", function(err, client){
+//connect to roundtableListDatabase on Startup
+mongoUtil.connectToServer("roundtableListDatabase", function(err, client){
     if (err) console.log(err);
 });
 
-// create unique identifier 
+// create unique identifier
 function uuidv4() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
       var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
@@ -21,33 +21,33 @@ function createSecretId(len){
     for (var i = 0; i < len; i++ ){
         result += characters.charAt(Math.floor(Math.random() * charsLength));
     }
-    return result; 
+    return result;
 }
 
-function createDiscourseUDIFromName(discourse_name){
-    var discourse_UDI = discourse_name.replace(/[^\w\s]/gi, '').trim().replace(/ /g, '-').toLowerCase(); 
+function createRoundtableUDIFromName(roundtable_name){
+    var roundtable_UDI = roundtable_name.replace(/[^\w\s]/gi, '').trim().replace(/ /g, '-').toLowerCase();
     //if the last entry is an integer, this could cause collision issues
-    var splitList = discourse_UDI.split('-');
+    var splitList = roundtable_UDI.split('-');
     var lastEntry = splitList[splitList.length - 1];
     if(isNaN(lastEntry) == false){
-        discourse_UDI += '-safe';
+        roundtable_UDI += '-safe';
     }
-    return discourse_UDI;
+    return roundtable_UDI;
 }
 
-var uniqueUDIPromise = (discourse_UDI) => (
+var uniqueUDIPromise = (roundtable_UDI) => (
     new Promise((resolve, reject) => {
         var dbo = mongoUtil.getDb();
         var query = {
-                    UDI: {$regex: new RegExp(discourse_UDI, 'i')}, 
+                    UDI: {$regex: new RegExp(roundtable_UDI, 'i')},
                     end_datetime: {$eq: null}
                     };
 
-        dbo.collection("discourseList").find(query).toArray(function(e, res){                
+        dbo.collection("roundtableList").find(query).toArray(function(e, res){
             if(e) throw e;
-            var maxInteger = 0; 
+            var maxInteger = 0;
             for(var i = 0; i < res.length; i++){
-                if(discourse_UDI == res[i]["UDI"]){
+                if(roundtable_UDI == res[i]["UDI"]){
                     maxInteger = 1;
                 }else{
                     var splitList = res[i]["UDI"].split('-');
@@ -58,118 +58,118 @@ var uniqueUDIPromise = (discourse_UDI) => (
                 }
                 }
                 if(maxInteger > 0){
-                   discourse_UDI += '-' + String(maxInteger);
+                   roundtable_UDI += '-' + String(maxInteger);
                 }
-                resolve(discourse_UDI);
+                resolve(roundtable_UDI);
             })
     })
 )
 
-var callUniqueUDIPromise = async (discourse_UDI) => {
-    var result = await (uniqueUDIPromise(discourse_UDI));
+var callUniqueUDIPromise = async (roundtable_UDI) => {
+    var result = await (uniqueUDIPromise(roundtable_UDI));
     return result;
 }
 
-var insertRecordPromise = (discourse_data) => (
+var insertRecordPromise = (roundtable_data) => (
     new Promise((resolve, reject) => {
         var dbo = mongoUtil.getDb();
-        dbo.collection("discourseList").insertOne(discourse_data, function(e, res){
+        dbo.collection("roundtableList").insertOne(roundtable_data, function(e, res){
             if(e) throw e;
             resolve('success');
         })
     })
 )
 
-var callInsertRecordPromise = async (discourse_data) => {
-    var result = await (insertRecordPromise(discourse_data));
+var callInsertRecordPromise = async (roundtable_data) => {
+    var result = await (insertRecordPromise(roundtable_data));
     return result;
 }
 
-var findDiscourseByUDIPromise = (community, discourse_UDI) => (
+var findRoundtableByUDIPromise = (community, roundtable_UDI) => (
     new Promise((resolve, reject) => {
         var dbo = mongoUtil.getDb();
         if(community != ''){
             var query = {
-                UDI: discourse_UDI,
+                UDI: roundtable_UDI,
                 community: community,
                 end_datetime: null
             }
         }
         else{
             var query = {
-                UDI: discourse_UDI,
+                UDI: roundtable_UDI,
                 end_datetime: null
             }
         }
-        dbo.collection("discourseList").find(query).toArray(function(e, res){ 
+        dbo.collection("roundtableList").find(query).toArray(function(e, res){
             if(e) throw e;
             if(res.length == 0){
                 resolve(null);
             }else if(res.length == 1){
                 resolve(res);
             }else{
-                resolve("ERROR! More than one discourse with this UDI!")
+                resolve("ERROR! More than one roundtable with this UDI!")
             }
         })
     })
 )
 
-var callfindDiscourseByUDIPromise = async (community, discourse_UDI) => {
-    var result = await (findDiscourseByUDIPromise(community, discourse_UDI));
-    return result; 
+var callfindRoundtableByUDIPromise = async (community, roundtable_UDI) => {
+    var result = await (findRoundtableByUDIPromise(community, roundtable_UDI));
+    return result;
 }
 
-var findDiscourseByJIDPromise = (discourse_JID) => (
+var findRoundtableByJIDPromise = (roundtable_JID) => (
     new Promise((resolve, reject) => {
         var dbo = mongoUtil.getDb();
         var query = {
-            JID: discourse_JID
+            JID: roundtable_JID
         }
-        dbo.collection("discourseList").find(query).toArray(function(e, res){ 
+        dbo.collection("roundtableList").find(query).toArray(function(e, res){
             if(e) throw e;
             if(res.length == 0){
                 resolve(null);
             }else if(res.length == 1){
                 resolve(res);
             }else{
-                resolve("ERROR! More than one discourse with this JID!")
+                resolve("ERROR! More than one roundtable with this JID!")
             }
         })
     })
 )
 
-var callfindDiscourseByJIDPromise = async (discourse_JID) => {
-    var result = await (findDiscourseByJIDPromise(discourse_JID));
-    return result; 
+var callfindRoundtableByJIDPromise = async (roundtable_JID) => {
+    var result = await (findRoundtableByJIDPromise(roundtable_JID));
+    return result;
 }
 
-var findDiscourseByLIDPromise = (discourse_LID) => (
+var findRoundtableByLIDPromise = (roundtable_LID) => (
     new Promise((resolve, reject) => {
         var dbo = mongoUtil.getDb();
         var query = {
-            LID: discourse_LID
+            LID: roundtable_LID
         }
-        dbo.collection("discourseList").find(query).toArray(function(e, res){ 
+        dbo.collection("roundtableList").find(query).toArray(function(e, res){
             if(e) throw e;
             if(res.length == 0){
                 resolve(null);
             }else if(res.length == 1){
                 resolve(res);
             }else{
-                resolve("ERROR! More than one discourse with this LID!")
+                resolve("ERROR! More than one roundtable with this LID!")
             }
         })
     })
 )
 
-var callfindDiscourseByLIDPromise = async (discourse_LID) => {
-    var result = await (findDiscourseByLIDPromise(discourse_LID));
-    return result; 
+var callfindRoundtableByLIDPromise = async (roundtable_LID) => {
+    var result = await (findRoundtableByLIDPromise(roundtable_LID));
+    return result;
 }
 
 var updateParticipantsAndListenersCount = (UDI, type, operation) => {
     try{
-        callfindDiscourseByUDIPromise('', UDI).then(function(res){
+        callfindRoundtableByUDIPromise('', UDI).then(function(res){
             var dbo = mongoUtil.getDb();
             var query = { UDI: UDI, end_datetime: null };
             if(type == 'participant'){
@@ -197,7 +197,7 @@ var updateParticipantsAndListenersCount = (UDI, type, operation) => {
                 }
                 var update = { $set: { current_listeners: current_listeners, max_listeners: max_listeners } };
             }
-            dbo.collection("discourseList").updateOne(query, update, function(e, res){
+            dbo.collection("roundtableList").updateOne(query, update, function(e, res){
                 if(e) throw e;
                 // console.log('1 record updated');
             })
@@ -209,9 +209,9 @@ var updateParticipantsAndListenersCount = (UDI, type, operation) => {
 
 var updateCurrentParticipantsArray = (UDI, user_id, nickname, operation) => {
     try{
-        callfindDiscourseByUDIPromise('', UDI).then(function(res){
-            if(res != null && res != "ERROR! More than one discourse with this UDI!"){
-                var currentParticipantsArray = res[0]['current_participants_array']; 
+        callfindRoundtableByUDIPromise('', UDI).then(function(res){
+            if(res != null && res != "ERROR! More than one roundtable with this UDI!"){
+                var currentParticipantsArray = res[0]['current_participants_array'];
                 if(operation == 'add'){
                     var newParticipant = [user_id, nickname];
                     if(Array.isArray(currentParticipantsArray) == false){
@@ -239,12 +239,12 @@ var updateCurrentParticipantsArray = (UDI, user_id, nickname, operation) => {
                         console.log("Participant not found");
                     }
                 }
-                
+
                 console.log(currentParticipantsArray);
                 var dbo = mongoUtil.getDb();
                 var query = { UDI: UDI, end_datetime:null };
                 var update = { $set:{ current_participants_array: currentParticipantsArray} };
-                dbo.collection("discourseList").updateOne(query, update, function(e, res){
+                dbo.collection("roundtableList").updateOne(query, update, function(e, res){
                     if(e) throw e;
                 });
             }
@@ -255,90 +255,90 @@ var updateCurrentParticipantsArray = (UDI, user_id, nickname, operation) => {
     }
 }
 
-var createNewDiscoursePromise = (discourse_data) => (
+var createNewRoundtablePromise = (roundtable_data) => (
         new Promise((resolve, reject) => {
             try{
-                var discourse_name = discourse_data['discourse-name'];
-                var discourse_description = discourse_data['discourse-description'];
-                var discourse_tags = discourse_data['discourse-tags'];
-                var join_visibility = discourse_data['join-visibility'];
-                var listen_visibility = discourse_data['listen-visibility'];
-                var discourse_JID = discourse_data['discourse_JID'];
-                var discourse_LID = discourse_data['discourse_LID'];
-                var max_allowed_participants = discourse_data['max-allowed-participants'];
-                if("community" in discourse_data){
-                    var discourse_community = discourse_data['community'];
+                var roundtable_name = roundtable_data['roundtable-name'];
+                var roundtable_description = roundtable_data['roundtable-description'];
+                var roundtable_tags = roundtable_data['roundtable-tags'];
+                var join_visibility = roundtable_data['join-visibility'];
+                var listen_visibility = roundtable_data['listen-visibility'];
+                var roundtable_JID = roundtable_data['roundtable_JID'];
+                var roundtable_LID = roundtable_data['roundtable_LID'];
+                var max_allowed_participants = roundtable_data['max-allowed-participants'];
+                if("community" in roundtable_data){
+                    var roundtable_community = roundtable_data['community'];
                 }else{
-                    var discourse_community = '';
+                    var roundtable_community = '';
                 }
-                if("metadata" in discourse_data){
-                    var metadata = discourse_data['metadata'];
+                if("metadata" in roundtable_data){
+                    var metadata = roundtable_data['metadata'];
                 }else{
                     var metadata = '';
                 }
 
-                var discourse_RID = uuidv4();
-                var discourse_UDI = createDiscourseUDIFromName(discourse_name);
+                var roundtable_RID = uuidv4();
+                var roundtable_UDI = createRoundtableUDIFromName(roundtable_name);
 
                 // ensure that the promise for finding unique UDI resolved before attempting to insert data
-                callUniqueUDIPromise(discourse_UDI).then(function(result){
-                    discourse_UDI = result;
+                callUniqueUDIPromise(roundtable_UDI).then(function(result){
+                    roundtable_UDI = result;
 
                     if(join_visibility === 'private'){
-                        var discourse_JID_secret = createSecretId(16);
+                        var roundtable_JID_secret = createSecretId(16);
                         var public_join = false;
                     }else{
-                        var discourse_JID_secret = null;
+                        var roundtable_JID_secret = null;
                         var public_join = true;
                     }
 
                     if(listen_visibility === 'private'){
-                        var discourse_LID_secret = createSecretId(16);
+                        var roundtable_LID_secret = createSecretId(16);
                         var public_listen = false;
                     }else{
-                        var discourse_LID_secret = null;
+                        var roundtable_LID_secret = null;
                         var public_listen = true;
                     }
 
-                    var discourse_start_datetime = new Date();
-                    var discourse_end_datetime = null;
+                    var roundtable_start_datetime = new Date();
+                    var roundtable_end_datetime = null;
 
-                    var discourse_current_participants = 0;
-                    var discourse_current_listeners = 0;
-                    var discourse_max_participants = 0;
-                    var discourse_max_listeners = 0;
+                    var roundtable_current_participants = 0;
+                    var roundtable_current_listeners = 0;
+                    var roundtable_max_participants = 0;
+                    var roundtable_max_listeners = 0;
 
                     //add everything to an array
-                    var discourse_data = {
-                        name: discourse_name,
-                        description: discourse_description,
-                        tags: discourse_tags,
-                        RID: discourse_RID,
-                        UDI: discourse_UDI, 
-                        JID: discourse_JID,
-                        JID_secret: discourse_JID_secret,
-                        LID: discourse_LID, 
-                        LID_secret: discourse_LID_secret, 
+                    var roundtable_data = {
+                        name: roundtable_name,
+                        description: roundtable_description,
+                        tags: roundtable_tags,
+                        RID: roundtable_RID,
+                        UDI: roundtable_UDI,
+                        JID: roundtable_JID,
+                        JID_secret: roundtable_JID_secret,
+                        LID: roundtable_LID,
+                        LID_secret: roundtable_LID_secret,
                         public_join: public_join,
                         public_listen: public_listen,
-                        start_datetime: discourse_start_datetime,
-                        end_datetime: discourse_end_datetime,
-                        current_participants: discourse_current_participants,
-                        current_listeners: discourse_current_listeners,
-                        max_participants: discourse_max_participants,
-                        max_listeners: discourse_max_listeners,
+                        start_datetime: roundtable_start_datetime,
+                        end_datetime: roundtable_end_datetime,
+                        current_participants: roundtable_current_participants,
+                        current_listeners: roundtable_current_listeners,
+                        max_participants: roundtable_max_participants,
+                        max_listeners: roundtable_max_listeners,
                         max_allowed_participants: max_allowed_participants,
-                        community: discourse_community,
+                        community: roundtable_community,
                         metadata: metadata,
                         current_participants_array: []
                      }
 
-                    callInsertRecordPromise(discourse_data).then(function(result){
+                    callInsertRecordPromise(roundtable_data).then(function(result){
                         if(result == 'success'){
                             var return_data = {
-                                UDI: discourse_UDI,
-                                JID_secret: discourse_JID_secret,
-                                LID_secret: discourse_LID_secret
+                                UDI: roundtable_UDI,
+                                JID_secret: roundtable_JID_secret,
+                                LID_secret: roundtable_LID_secret
                             }
                             resolve(return_data);
                         }
@@ -350,28 +350,28 @@ var createNewDiscoursePromise = (discourse_data) => (
         })
     )
 
-var callCreateNewDiscoursePromise = async (discourse_data) => {
-    var result = await createNewDiscoursePromise(discourse_data);
+var callCreateNewRoundtablePromise = async (roundtable_data) => {
+    var result = await createNewRoundtablePromise(roundtable_data);
     return result;
 }
 
-// export these functions 
+// export these functions
 module.exports = {
     uuidv4,
     createSecretId,
-    createDiscourseUDIFromName,
+    createRoundtableUDIFromName,
     uniqueUDIPromise,
     callUniqueUDIPromise,
     insertRecordPromise,
     callInsertRecordPromise,
-    findDiscourseByUDIPromise,
-    callfindDiscourseByUDIPromise,
-    findDiscourseByJIDPromise,
-    callfindDiscourseByJIDPromise,
-    findDiscourseByLIDPromise,
-    callfindDiscourseByLIDPromise,
+    findRoundtableByUDIPromise,
+    callfindRoundtableByUDIPromise,
+    findRoundtableByJIDPromise,
+    callfindRoundtableByJIDPromise,
+    findRoundtableByLIDPromise,
+    callfindRoundtableByLIDPromise,
     updateParticipantsAndListenersCount,
     updateCurrentParticipantsArray,
-    createNewDiscoursePromise,
-    callCreateNewDiscoursePromise
+    createNewRoundtablePromise,
+    callCreateNewRoundtablePromise
 }

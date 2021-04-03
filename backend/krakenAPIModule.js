@@ -1,5 +1,4 @@
 //window.onload = function() {
-//const KRAKEN_API = 'https://rpc.discourse.fm';
 const KRAKEN_API = 'http://kraken_listen_only:7000';
 //const KRAKEN_API = 'http://localhost:7000';
 const fetch = require("node-fetch");

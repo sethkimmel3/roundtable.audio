@@ -13,7 +13,7 @@ mongoUtil.connectToServer("discourseListDatabase", function(err, client){
     if (err) console.log(err);
 });
 
- 
+
 var T = new Twit({
   consumer_key:         'RwXnCUM4ZrDm9zeMtaXFpYOfb',
   consumer_secret:      '5P9E8UTXeerWDhZm7D9z4bkgVtoU43vBFXdkt3mV7bEJGHTFpl',
@@ -22,32 +22,32 @@ var T = new Twit({
   timeout_ms:           60*1000,  // optional HTTP request timeout to apply to all requests.
   strictSSL:            true,     // optional - requires SSL certificates to be valid.
 })
- 
+
 var post_tweet = (name, description, tags, public_join, public_listen, UDI) => {
     try{
-        
+
         var tags_string = '';
         for(var i = 0; i < tags.length; i++){
             tags_string += '#' + tags[i].replace(/\s/g,'');
             if(i != tags.length - 1){
-                tags_string += ' '; 
+                tags_string += ' ';
             }
         }
-        
+
         if(public_join){
             var join_emoji = "✅";
         }else{
             var join_emoji = "❌";
         }
-        
+
         if(public_listen){
             var listen_emoji = "✅";
         }else{
             var listen_emoji = "❌";
         }
-        
+
         var public_availability_string = 'Public Join: ' + join_emoji + ' | Public Listen: ' + listen_emoji + '\n';
-        
+
         var status = 'DISCOURSE BOT 🤖: \n';
         status += 'Name: ' + name + '\n';
         // (280 - 18 - UDI.length will ensure there are enough chars remaining for link)
@@ -61,22 +61,22 @@ var post_tweet = (name, description, tags, public_join, public_listen, UDI) => {
             status += public_availability_string;
         }
         status += 'discourse.fm/live/' + UDI;
-        
+
         T.post('statuses/update', { status: status }, function(err, data, response){
           return data['id'];
         });
-    
+
     } catch(error){
         console.log(error);
         return "error";
     }
-        
+
 }
 
 //cron.schedule('0,30 * * * * *', () =>{
-//    try { 
+//    try {
 //        var dbo = mongoUtil.getDb();
-//        
+//
 //        var ongoing_public_query = {
 //            end_datetime: {
 //                $eq: null
@@ -85,11 +85,11 @@ var post_tweet = (name, description, tags, public_join, public_listen, UDI) => {
 //                $eq: true
 //            }
 //        };
-//        
+//
 //        var cursor = dbo.collection("discourseList").find(ongoing_public_query);
 //        cursor.each(function(err,item){
 //            if(item != null){
-//                
+//
 //                // find if tweet already made
 //                var _id = item['_id'];
 //                var tweet_exists_query = {
@@ -97,7 +97,7 @@ var post_tweet = (name, description, tags, public_join, public_listen, UDI) => {
 //                        $eq: _id
 //                    }
 //                }
-//                
+//
 //                dbo.collection("discourseTweets").find(tweet_exists_query).count().then(function(numItems){
 //                    if(numItems == 0){
 //                        // tweet it
@@ -107,11 +107,11 @@ var post_tweet = (name, description, tags, public_join, public_listen, UDI) => {
 //                        var public_join = item['public_join'];
 //                        var public_listen = item['public_listen'];
 //                        var UDI = item['UDI'];
-//                        
+//
 //                        var tweet_id = post_tweet(name, description, tags, public_join, public_listen, UDI);
-//                        
+//
 //                        if(tweet_id != 'error'){
-//                            //insert into discourseTweets collection 
+//                            //insert into discourseTweets collection
 //                            var to_insert = {
 //                                'discourse_id': _id,
 //                                'tweet_id': tweet_id
@@ -120,14 +120,14 @@ var post_tweet = (name, description, tags, public_join, public_listen, UDI) => {
 //                                if(e) throw e;
 //                                console.log('new tweet posted');
 //                            });
-//                        }  
+//                        }
 //                    }
 //                });
-//                
-//                
+//
+//
 //            }
 //        });
-//        
+//
 //        console.log('\n');
 //    } catch(error){
 //        console.log(error);
@@ -136,29 +136,29 @@ var post_tweet = (name, description, tags, public_join, public_listen, UDI) => {
 
 function newMention(tweet){
     try{
-        
+
         console.log("new mentioned detected.");
-        
+
         if(tweet.truncated == true){
             var tweettxt = tweet.extended_tweet.full_text;
         }else{
-            var tweettxt = tweet.text;   
+            var tweettxt = tweet.text;
         }
-        
+
         if(tweet.hasOwnProperty('retweeted_status')){
             var is_retweet = true;
         }else{
             var is_retweet = false;
         }
-        
+
         if(tweettxt.includes('start a discourse') && is_retweet == false){
 
             var sender_name = tweet.user.screen_name;
             var tweet_id = tweet.id_str;
-            
+
             var original_tweet_in_reply_to = tweet.in_reply_to_status_id_str;
             var in_reply_to_screen_name = tweet.in_reply_to_screen_name;
-            
+
             if(original_tweet_in_reply_to == null){
                 var reply_to = tweet_id;
                 var tweet_link = 'twitter.com/' + sender_name + '/status/' + tweet_id;
@@ -166,10 +166,10 @@ function newMention(tweet){
                 var reply_to = original_tweet_in_reply_to;
                 var tweet_link = 'twitter.com/' + sender_name + '/status/' + original_tweet_in_reply_to;
             }
-            
+
             var discourse_info_array = {
                                            "discourse-name": 'A Freshly Whipped up Discourse for @' + sender_name,
-                                           "discourse-description": "In response to: " + tweet_link, 
+                                           "discourse-description": "In response to: " + tweet_link,
                                            "discourse-tags": ['autogenerated', 'from', 'tweet'],
                                            "join-visibility": 'public',
                                            "listen-visibility": 'public',
@@ -179,18 +179,18 @@ function newMention(tweet){
                                         }
 
             DBUtils.callCreateNewDiscoursePromise(discourse_info_array).then(function(res){
-//                console.log(res); 
+//                console.log(res);
                 if("UDI" in res){
-                    //successly created  
+                    //successly created
                     var UDI = res["UDI"];
                     var reply_link = 'discourse.fm/live/' + UDI;
-                    
+
                     if(in_reply_to_screen_name == null){
                         var reply = "Here's a newly created audio chat room for this tweet @" + sender_name + ".\n\n" + reply_link + "\n\nCome discuss live with others!";
                     }else{
                         var reply = "Here's a newly created audio chat room for this tweet @" + in_reply_to_screen_name + ", autogenerated from @" + sender_name + "'s reply tweet.\n\n" + reply_link + "\n\nCome discuss live with others!";
                     }
-                    
+
                     var params = {
                         status: reply,
                         in_reply_to_status_id: reply_to
@@ -201,7 +201,7 @@ function newMention(tweet){
                           console.log(err);
                        } else {
                           console.log('success');
-                       } 
+                       }
                     });
                 }else{
                     console.log("Error in creating discourse: " + res);

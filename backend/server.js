@@ -9,8 +9,8 @@ var DBUtils = require('./DBUtils.js');
 const fetch = require("node-fetch");
 var cron = require('node-cron');
 
-//connect to discourseListDatabase on Startup
-mongoUtil.connectToServer("discourseListDatabase", function(err, client){
+//connect to roundtableListDatabase on Startup
+mongoUtil.connectToServer("roundtableListDatabase", function(err, client){
     if (err) console.log(err);
 });
 
@@ -30,7 +30,7 @@ io.on('connection', (socket) => {
                 }
                 DBUtils.updateParticipantsAndListenersCount(UDI, connection_state, 'subtract');
                 DBUtils.updateCurrentParticipantsArray(UDI, user_id, '', 'remove');
-                io.sockets.in(auth_creds[UDI]['RID']).emit('updateDiscourseCount', update_data);
+                io.sockets.in(auth_creds[UDI]['RID']).emit('updateRoundtableCount', update_data);
                 var remove_seat_data = {
                     'user_id': user_id
                 }
@@ -40,7 +40,7 @@ io.on('connection', (socket) => {
                     'type': 'subtract_listener'
                 }
                 DBUtils.updateParticipantsAndListenersCount(UDI, connection_state, 'subtract');
-                io.sockets.in(auth_creds[UDI]['RID']).emit('updateDiscourseCount', update_data);
+                io.sockets.in(auth_creds[UDI]['RID']).emit('updateRoundtableCount', update_data);
             }
         }
     });
@@ -59,9 +59,9 @@ io.on('connection', (socket) => {
 	    var user_LID_secret = reinstate_participant_data['user_LID_secret'];
 
             // do a mini-auth to make sure they're actually supposed to be allowed in
-            DBUtils.callfindDiscourseByUDIPromise('', user_UDI).then(function(res){
+            DBUtils.callfindRoundtableByUDIPromise('', user_UDI).then(function(res){
                var to_return;
-               if(res != null && res != "ERROR! More than one discourse with this UDI!"){
+               if(res != null && res != "ERROR! More than one roundtable with this UDI!"){
                    var join_auth;
                    var listen_auth;
 
@@ -107,8 +107,8 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('create_discourse', function(discourse_data, handler){
-        DBUtils.callCreateNewDiscoursePromise(discourse_data).then(function(res){
+    socket.on('create_roundtable', function(roundtable_data, handler){
+        DBUtils.callCreateNewRoundtablePromise(roundtable_data).then(function(res){
             console.log(res);
             if("UDI" in res){
                 handler(null, res);
@@ -120,8 +120,8 @@ io.on('connection', (socket) => {
 
     socket.on('get_auth_creds_from_jid', function(auth_jid, handler){
        try{
-           DBUtils.callfindDiscourseByJIDPromise(auth_jid).then(function(res){
-               if(res != null && res != "ERROR! More than one discourse with this JID!"){
+           DBUtils.callfindRoundtableByJIDPromise(auth_jid).then(function(res){
+               if(res != null && res != "ERROR! More than one roundtable with this JID!"){
                    //console.log(res[0]);
                    var return_data = {
                        "UDI": res[0]['UDI'],
@@ -143,8 +143,8 @@ io.on('connection', (socket) => {
 
     socket.on('get_auth_creds_from_lid', function(auth_lid, handler){
        try{
-           DBUtils.callfindDiscourseByLIDPromise(auth_lid).then(function(res){
-               if(res != null && res != "ERROR! More than one discourse with this LID!"){
+           DBUtils.callfindRoundtableByLIDPromise(auth_lid).then(function(res){
+               if(res != null && res != "ERROR! More than one roundtable with this LID!"){
                    //console.log(res[0]);
                    var return_data = {
                        "UDI": res[0]['UDI'],
@@ -162,7 +162,7 @@ io.on('connection', (socket) => {
        }
     });
 
-    socket.on('auth_into_discourse', function(auth_data, handler){
+    socket.on('auth_into_roundtable', function(auth_data, handler){
 
         try{
             console.log('Auth attempt.');
@@ -172,9 +172,9 @@ io.on('connection', (socket) => {
             var user_JID_secret = auth_data['JID_secret'];
             var user_LID_secret = auth_data['LID_secret'];
 
-            DBUtils.callfindDiscourseByUDIPromise('', user_UDI).then(function(res){
+            DBUtils.callfindRoundtableByUDIPromise('', user_UDI).then(function(res){
                var to_return;
-               if(res != null && res != "ERROR! More than one discourse with this UDI!"){
+               if(res != null && res != "ERROR! More than one roundtable with this UDI!"){
                    var join_auth;
                    var listen_auth;
 
@@ -229,7 +229,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('connectToDiscourse', function(connection_data, handler){
+    socket.on('connectToRoundtable', function(connection_data, handler){
         try {
             var UDI = connection_data["UDI"];
             user_id = connection_data["user_id"];
@@ -240,9 +240,9 @@ io.on('connection', (socket) => {
             }else if(connection_type == 'listen' && auth_creds[UDI]['listen_auth'] == false){
                 handler(null, 'not authorized');
             }else if((connection_type == 'join' && auth_creds[UDI]['join_auth'] == true ) || (connection_type == 'listen' && auth_creds[UDI]['join_auth'] == true )){
-                DBUtils.callfindDiscourseByUDIPromise('', UDI).then(function(res){
+                DBUtils.callfindRoundtableByUDIPromise('', UDI).then(function(res){
                     if(connection_state == null){
-                       if(res != null && res != "ERROR! More than one discourse with this UDI!" && (res[0]['current_participants'] < res[0]['max_allowed_participants'])){
+                       if(res != null && res != "ERROR! More than one roundtable with this UDI!" && (res[0]['current_participants'] < res[0]['max_allowed_participants'])){
                            socket.join(res[0]['RID']);
                            if(connection_type == 'join'){
                                connection_state = 'participant';
@@ -265,14 +265,14 @@ io.on('connection', (socket) => {
                                'current_listeners': current_listeners,
                                'current_participants': current_participants
                            }
-                           io.sockets.in(res[0]['RID']).emit('updateDiscourseCount', count_data);
+                           io.sockets.in(res[0]['RID']).emit('updateRoundtableCount', count_data);
                            handler(null, count_data);
                        }
                        else if(res[0]['current_participants'] >= res[0]['max_allowed_participants']){
                            handler('room is full', null);
                        }
                     }else if(connection_type == 'join' && connection_state == 'listener'){
-                        if(res != null && res != "ERROR! More than one discourse with this UDI!" && (res[0]['current_participants'] < res[0]['max_allowed_participants'])){
+                        if(res != null && res != "ERROR! More than one roundtable with this UDI!" && (res[0]['current_participants'] < res[0]['max_allowed_participants'])){
 
                             connection_state = 'participant';
 
@@ -284,7 +284,7 @@ io.on('connection', (socket) => {
                                 'current_listeners': current_listeners,
                                 'current_participants': current_participants
                             }
-                            io.sockets.in(res[0]['RID']).emit('updateDiscourseCount', count_data);
+                            io.sockets.in(res[0]['RID']).emit('updateRoundtableCount', count_data);
                             handler(null, count_data);
 
                             DBUtils.updateParticipantsAndListenersCount(UDI, 'listener', 'subtract');
@@ -295,7 +295,7 @@ io.on('connection', (socket) => {
                            handler('room is full', null);
                         }
                     }else if(connection_type == 'listen' && connection_state == 'participant'){
-                        if(res != null && res != "ERROR! More than one discourse with this UDI!"){
+                        if(res != null && res != "ERROR! More than one roundtable with this UDI!"){
 
                             connection_state = 'listener';
 
@@ -306,7 +306,7 @@ io.on('connection', (socket) => {
                                 'current_listeners': current_listeners,
                                 'current_participants': current_participants
                             }
-                            io.sockets.in(res[0]['RID']).emit('updateDiscourseCount', count_data); 
+                            io.sockets.in(res[0]['RID']).emit('updateRoundtableCount', count_data);
                             var remove_seat_data = {
                                 'user_id': user_id
                             }
@@ -446,12 +446,12 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('getActiveDiscourses', function(data, handler){
+    socket.on('getActiveRoundtables', function(data, handler){
         try {
             var dbo = mongoUtil.getDb();
             var query = { end_datetime: null, public_listen:true };
             var exclude = {JID:0, JID_secret:0, LID:0, LID_secret:0, RID:0, max_participants:0, max_listeners:0, _id:0};
-            dbo.collection("discourseList").find(query).project(exclude).toArray(function(e, res){ 
+            dbo.collection("roundtableList").find(query).project(exclude).toArray(function(e, res){
                 handler(null, res);
             })
         } catch(err){
@@ -460,31 +460,31 @@ io.on('connection', (socket) => {
     });
 
     //FOR HACKERNEWS PURPOSES
-    socket.on('createCommunityDiscourseIfNotExist', function(story_data, handler){
-        //this will check if a discourse exists for a given name and create one if not
+    socket.on('createCommunityRoundtableIfNotExist', function(story_data, handler){
+        //this will check if a roundtable exists for a given name and create one if not
         try{
             var story_name = story_data['story_name'];
             var story_url = story_data['story_url'];
             var story_id = story_data['story_id'];
             var community = story_data['community'];
-            var discourse_UDI = DBUtils.createDiscourseUDIFromName(story_name);
-            DBUtils.callfindDiscourseByUDIPromise('hackernews', discourse_UDI).then(function(res){
+            var roundtable_UDI = DBUtils.createRoundtableUDIFromName(story_name);
+            DBUtils.callfindRoundtableByUDIPromise('hackernews', roundtable_UDI).then(function(res){
                 if(res == null){
-                    // create a new discourse
-                    var discourse_info_array = {
-                       "discourse-name": story_name,
-                       "discourse-description": story_url,
-                       "discourse-tags": ['YC', 'hackernews'],
+                    // create a new roundtable
+                    var roundtable_info_array = {
+                       "roundtable-name": story_name,
+                       "roundtable-description": story_url,
+                       "roundtable-tags": ['YC', 'hackernews'],
                        "community": "hackernews",
                        "join-visibility": 'public',
                        "listen-visibility": 'public',
-                       "discourse_JID": null,
-                       "discourse_LID": null,
+                       "roundtable_JID": null,
+                       "roundtable_LID": null,
                        "max-allowed-participants": 15,
                        "metadata": {"story_id": story_id}
                     }
 
-                   DBUtils.callCreateNewDiscoursePromise(discourse_info_array).then(function(res){
+                   DBUtils.callCreateNewRoundtablePromise(roundtable_info_array).then(function(res){
                         if("UDI" in res){
                             handler(null, res["UDI"]);
                         }else{
@@ -510,14 +510,14 @@ io.on('connection', (socket) => {
             var story_UDIs = [];
             for(var i = 0; i < stories.length; i++){
                 if(stories[i] != null){
-                    story_UDIs[i] = DBUtils.createDiscourseUDIFromName(stories[i].title);
+                    story_UDIs[i] = DBUtils.createRoundtableUDIFromName(stories[i].title);
                 }
             }
             var dbo = mongoUtil.getDb();
             var query = { UDI: {$in: story_UDIs}, community: community, end_datetime: null};
             var story_counts = [];
 
-            dbo.collection("discourseList").find(query).toArray(function(e, res){
+            dbo.collection("roundtableList").find(query).toArray(function(e, res){
                 for(var i = 0; i < story_UDIs.length; i++){
                     var found = false;
                     for(var j = 0; j < res.length; j++){
@@ -567,7 +567,7 @@ io.on('connection', (socket) => {
             var dbo = mongoUtil.getDb();
             var query = {community: community, end_datetime: null};
             var story_ids = [];
-            dbo.collection("discourseList").find(query).sort( {current_participants: -1} ).toArray(function(e, res){
+            dbo.collection("roundtableList").find(query).sort( {current_participants: -1} ).toArray(function(e, res){
                 for(var i = 0; i < res.length; i++){
                     if("metadata" in res[i]){
                         story_ids[i] = res[i]['metadata']['story_id'];
@@ -583,13 +583,13 @@ io.on('connection', (socket) => {
 
 });
 
-// every six hours this will end discourses that either have no active participants and have been active for more than 3 hours, or have been active for more than 24 hours (in case of a bug in tracking number of participants)
+// every six hours this will end roundtables that either have no active participants and have been active for more than 3 hours, or have been active for more than 24 hours (in case of a bug in tracking number of participants)
 cron.schedule('* * 0,6,12,18 * * *', () =>{
     try {
         var dbo = mongoUtil.getDb();
         var query = { end_datetime: null };
         var to_end = [];
-        dbo.collection("discourseList").find(query).toArray(function(e, res){
+        dbo.collection("roundtableList").find(query).toArray(function(e, res){
             if(e) throw e;
             var now = Date.now();
             for(var i = 0; i < res.length; i++){
@@ -606,9 +606,9 @@ cron.schedule('* * 0,6,12,18 * * *', () =>{
             if(to_end.length > 0){
                 var query = { UDI: { $in: to_end } };
                 var update = { $set: {end_datetime: end_time } };
-                dbo.collection("discourseList").updateMany(query, update, function(err, result){
+                dbo.collection("roundtableList").updateMany(query, update, function(err, result){
                     if(err) throw err;
-                      console.log("Automatically ended the following discourses: " + to_end.toString())
+                      console.log("Automatically ended the following roundtables: " + to_end.toString())
                     });
               }
           });

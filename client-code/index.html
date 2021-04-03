@@ -13,7 +13,7 @@
     <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
-    <title>Discourse.fm</title>
+    <title>roundtable.audio</title>
   <style>
         .card {
           position: relative;
@@ -27,7 +27,7 @@
           cursor: pointer;
           display: inline-block
         }
-        .card:hover { 
+        .card:hover {
           box-shadow: 0 10px 15px rgba(0,0,0,0.3);
         }
         a.nostyle:link {
@@ -41,7 +41,7 @@
             color: inherit;
             cursor: auto;
         }
-      
+
        .navbar-fixed-left {
           width: auto;
           position: fixed;
@@ -63,23 +63,23 @@
             //connection to node server
             const node_conn = "https://roundtable.audio";
             var socket = io.connect(node_conn);
-            
-            // var socket = io.connect("https://www.discourse.fm");
-            
+
+            // add base domain
+            const base_domain = "https://roundtable.audio";
             // Add a connect listener
             socket.on('connect',function() {
                console.log('Client has connected to the server!');
             });
-            
+
             var isIncompatibleBrowser = $.fn.isIncompatibleBrowser();
-            
+
             if(isIncompatibleBrowser){
-                $('#deviceBrowserAlertContainer').html('<div id="deviceBrowserAlert" class="alert alert-warning alert-dismissible fade show" role="alert" style="margin: 0px;"> <strong>Hold up!</strong> It looks like you may be using an incompatible device and browser. Discourse.fm will not work on iOS Chrome or iOS Firefox at the moment. For best results, we recommend using desktop Chrome. <button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">&times;</span></button></div>');
+                $('#deviceBrowserAlertContainer').html('<div id="deviceBrowserAlert" class="alert alert-warning alert-dismissible fade show" role="alert" style="margin: 0px;"> <strong>Hold up!</strong> It looks like you may be using an incompatible device and browser. Roundtable.audio will not work on iOS Chrome or iOS Firefox at the moment. For best results, we recommend using desktop Chrome. <button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">&times;</span></button></div>');
             }
-            
+
             new ClipboardJS('#join-link-button');
             new ClipboardJS('#listen-link-button');
-            
+
             //handle jid, lid param requests
             function getUrlParam(name) {
                 name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
@@ -87,10 +87,10 @@
                 var results = regex.exec(window.location.search);
                 return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
             }
-            
+
             var auth_jid = getUrlParam('jid').trim();
             var auth_lid = getUrlParam('lid').trim();
-            
+
             if(auth_jid != ''){
                 //get JID_secret, LID, and LID_secret
                 socket.emit('get_auth_creds_from_jid', auth_jid, function(err, data){
@@ -102,13 +102,13 @@
                             "LID_secret": data['LID_secret']
                         }
                         localStorage.setItem(data['UDI'], JSON.stringify(data_to_store));
-                        window.location.href = 'https://www.discourse.fm/live/' + data['UDI'];
+                        window.location.href = base_domain + '/live/' + data['UDI'];
                    }else{
                        console.log(err);
                    }
                 });
             }
-            
+
             if(auth_lid != ''){
                 //get LID, and LID_secret
                 socket.emit('get_auth_creds_from_lid', auth_lid, function(err, data){
@@ -120,16 +120,16 @@
                             "LID_secret": data['LID_secret']
                         }
                         localStorage.setItem(data['UDI'], JSON.stringify(data_to_store));
-                        window.location.href = 'https://www.discourse.fm/live/' + data['UDI'];
+                        window.location.href = base_domain + '/live/' + data['UDI'];
                    }else{
                        console.log(err);
                    }
                 });
             }
-            
+
             var rtc = function(timestamp){
-               var words = ['share your ideas.', 
-                         'learn something new.', 
+               var words = ['share your ideas.',
+                         'learn something new.',
                          'debate a topic.',
                          'host an interview.',
                          'catch up with friends.',
@@ -143,15 +143,15 @@
                var i = Math.floor(Math.random() * Math.floor(words.length));
                $('#textchanger').html(words[i]).fadeTo(1500, 1, function(){
                     $('#textchanger').fadeTo(1500, 0, function(){
-                        window.requestAnimationFrame(rtc);  
+                        window.requestAnimationFrame(rtc);
                     })
                })
             }
-            
+
              window.requestAnimationFrame(rtc);
-            
-            // handle adding existing discourses 
-            $.fn.addDiscourseCard = function(title, tag_list, description, n_participants, n_listeners, public_join, public_listen, UDI){
+
+            // handle adding existing roundtables
+            $.fn.addRoundtableCard = function(title, tag_list, description, n_participants, n_listeners, public_join, public_listen, UDI){
                 tags_to_show = ''
                 $.each(tag_list, function(index, value){
                    tag = '<span class="badge badge-secondary mr-1">#' + value + '</span>';
@@ -168,56 +168,56 @@
                     var listen_span = '<span style="color:#dc3545;">Private Listen <img src="icons/x-red.svg"></span>';
                 }
                 //<img src="icons/arrow-right-circle-fill-grey.svg" style="float:right; height:35px;width:auto;"/>
-                var discourseCard = '<a class="nostyle" href="live/' + UDI + '"><div class="card" style="" data-UDI="' + UDI + '"><div class="card-body"><h4 class="card-title">' + title + '</h4><h6 class="card-subtitle mb-2 text-muted">' + tags_to_show + '</h6><p class="card-text">' + description + '</p><p>' + n_participants  + ' Participants | ' + n_listeners + ' Listeners</p>' + join_span + ' | ' + listen_span + '</div></div></a>';
-                $('#discourseCards').append(discourseCard);
+                var roundtableCard = '<a class="nostyle" href="live/' + UDI + '"><div class="card" style="" data-UDI="' + UDI + '"><div class="card-body"><h4 class="card-title">' + title + '</h4><h6 class="card-subtitle mb-2 text-muted">' + tags_to_show + '</h6><p class="card-text">' + description + '</p><p>' + n_participants  + ' Participants | ' + n_listeners + ' Listeners</p>' + join_span + ' | ' + listen_span + '</div></div></a>';
+                $('#roundtableCards').append(roundtableCard);
             }
-            
-            var public_discourses;
-            socket.emit('getActiveDiscourses', null, function(err, res){
-                public_discourses = res;
+
+            var public_roundtables;
+            socket.emit('getActiveRoundtables', null, function(err, res){
+                public_roundtables = res;
             });
-            
-            $('#find_public_discourses').click(function(){
-                $('#discourseCards').empty();
-                for(i = 0; i < public_discourses.length; i++){
-                    var received_title = public_discourses[i]['name'];
-                    var received_tags = public_discourses[i]['tags'];
-                    var received_description = public_discourses[i]['description'];
-                    var received_n_participants = public_discourses[i]['current_participants'];
-                    var received_n_listeners = public_discourses[i]['current_listeners'];
-                    var received_public_join = public_discourses[i]['public_join'];
-                    var received_public_listen = public_discourses[i]['public_listen'];
-                    var received_discourse_UDI = public_discourses[i]['UDI']; 
-                    $.fn.addDiscourseCard(received_title, received_tags, received_description, received_n_participants, received_n_listeners, received_public_join, received_public_listen, received_discourse_UDI);
+
+            $('#find_public_roundtables').click(function(){
+                $('#roundtableCards').empty();
+                for(i = 0; i < public_roundtables.length; i++){
+                    var received_title = public_roundtables[i]['name'];
+                    var received_tags = public_roundtables[i]['tags'];
+                    var received_description = public_roundtables[i]['description'];
+                    var received_n_participants = public_roundtables[i]['current_participants'];
+                    var received_n_listeners = public_roundtables[i]['current_listeners'];
+                    var received_public_join = public_roundtables[i]['public_join'];
+                    var received_public_listen = public_roundtables[i]['public_listen'];
+                    var received_roundtable_UDI = public_roundtables[i]['UDI'];
+                    $.fn.addRoundtableCard(received_title, received_tags, received_description, received_n_participants, received_n_listeners, received_public_join, received_public_listen, received_roundtable_UDI);
                 }
-                if(public_discourses.length == 0){
-                    $('#noPublicDiscourses').css({"display": "block"});
+                if(public_roundtables.length == 0){
+                    $('#noPublicRountables').css({"display": "block"});
                 }
             });
-            
-            // handle discourse creation
+
+            // handle roundtable creation
             var join_id;
             var listen_id;
             var join_link;
             var listen_link;
-            
-            // create unique identifier 
+
+            // create unique identifier
             function uuidv4() {
                 return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
                   var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
                   return v.toString(16);
                 });
               }
-            
-            $('#new_discourse').click(function(){
+
+            $('#new_roundtable').click(function(){
                 join_id = uuidv4();
                 listen_id = uuidv4();
-                join_link = 'https://www.discourse.fm/?jid=' + join_id;
-                listen_link = 'https://www.discourse.fm/?lid=' + listen_id;
+                join_link = base_domain + '/?jid=' + join_id;
+                listen_link = base_domain + '/?lid=' + listen_id;
                 $('#join-link-text').val(join_link);
                 $('#listen-link-text').val(listen_link);
             });
-            
+
             $.fn.copy_join_link_tooltip = function(){
                 $('#join-link-button').tooltip({title: 'Copied!'});
                 $('#join-link-button').tooltip('show');
@@ -225,7 +225,7 @@
                     $('#join-link-button').tooltip('dispose');
                 }, 3000);
             }
-            
+
             $.fn.copy_listen_link_tooltip = function(){
                 $('#copy-listen-link-button').tooltip({title: 'Copied!'});
                 $('#copy-listen-link-button').tooltip('show');
@@ -233,7 +233,7 @@
                     $('#copy-listen-link-button').tooltip('dispose');
                 }, 3000);
             }
-            
+
             $('#private-join').click(function(){
                $('#private-join').addClass('btn-primary');
                $('#private-join').removeClass('btn-outline-primary');
@@ -241,41 +241,41 @@
                $('#public-join').addClass('btn-outline-primary');
                $('#join-link').show();
             });
-            
+
             $('#public-join').click(function(){
                $('#public-join').addClass('btn-primary');
                $('#public-join').removeClass('btn-outline-primary');
                $('#private-join').removeClass('btn-primary');
                $('#private-join').addClass('btn-outline-primary');
                $('#join-link').hide();
-                
+
                if($('#private-listen').hasClass('btn-primary')){
                    $('#public-listen').click();
-                   $('#public-join').tooltip({title: 'Discourse cannot be private to listen to and public to join.'});
+                   $('#public-join').tooltip({title: 'Roundtable cannot be private to listen to and public to join.'});
                     $('#public-join').tooltip('show');
                     setTimeout(function(){
                         $('#public-join').tooltip('dispose');
                     }, 3000);
                }
             });
-            
+
             $('#private-listen').click(function(){
                $('#private-listen').addClass('btn-primary');
                $('#private-listen').removeClass('btn-outline-primary');
                $('#public-listen').removeClass('btn-primary');
                $('#public-listen').addClass('btn-outline-primary');
                $('#listen-link').show();
-                
+
                if($('#public-join').hasClass('btn-primary')){
                    $('#private-join').click();
-                   $('#private-listen').tooltip({title: 'Discourse cannot be private to listen to and public to join.'});
-                    $('#discourse-name').tooltip('show');
+                   $('#private-listen').tooltip({title: 'Roundtable cannot be private to listen to and public to join.'});
+                    $('#roundtable-name').tooltip('show');
                     setTimeout(function(){
                         $('#private-listen').tooltip('dispose');
                     }, 3000);
                }
             });
-            
+
             $('#public-listen').click(function(){
                $('#public-listen').addClass('btn-primary');
                $('#public-listen').removeClass('btn-outline-primary');
@@ -283,31 +283,31 @@
                $('#private-listen').addClass('btn-outline-primary');
                $('#listen-link').hide();
             });
-            
-            $('#discourse-name').keyup(function(){
+
+            $('#roundtable-name').keyup(function(){
                 var chars = $(this).val().length;
                 if(chars > 0){
-                    $('#discourse-name').removeClass('is-invalid');
-                    $('#discourse-name').addClass('is-valid');
+                    $('#roundtable-name').removeClass('is-invalid');
+                    $('#roundtable-name').addClass('is-valid');
                 }else{
-                    $('#discourse-name').removeClass('is-valid');
-                    $('#discourse-name').addClass('is-invalid');
+                    $('#roundtable-name').removeClass('is-valid');
+                    $('#roundtable-name').addClass('is-invalid');
                 }
             })
-            
-            $('#discourse-description').keyup(function(){
+
+            $('#roundtable-description').keyup(function(){
                var chars = $(this).val().length;
-               $('#discourse-description-character-count').html(180 - chars);
+               $('#roundtable-description-character-count').html(180 - chars);
                if(parseInt(chars) <= 180){
-                    $('#discourse-description').removeClass('is-invalid');
-                    $('#discourse-description').addClass('is-valid');
+                    $('#roundtable-description').removeClass('is-invalid');
+                    $('#roundtable-description').addClass('is-valid');
                }else{
-                    $('#discourse-description-character-count').html(0);
-                    $('#discourse-description').removeClass('is-valid');
-                    $('#discourse-description').addClass('is-invalid');
+                    $('#roundtable-description-character-count').html(0);
+                    $('#roundtable-description').removeClass('is-valid');
+                    $('#roundtable-description').addClass('is-invalid');
                }
             });
-            
+
             var tags = [];
             var tag_map = new Map();
             $.fn.removeTag = function(tag_id){
@@ -316,12 +316,12 @@
                 tags.splice(index, 1);
                 $('#tag-' + tag_id).remove();
                 if(tags.length == 0){
-                    $('#discourse-tags').removeClass('is-valid');
-                    $('#discourse-tags').addClass('is-invalid');
+                    $('#roundtable-tags').removeClass('is-valid');
+                    $('#roundtable-tags').addClass('is-invalid');
                 }
             }
-            
-            $('#discourse-tags').keyup(function(e){
+
+            $('#roundtable-tags').keyup(function(e){
                  var input = $(this).val().trim();
                  if(input.startsWith('#')){
                      input = input.substring(1);
@@ -333,94 +333,94 @@
                  if(((e.keyCode == 32) || (e.keyCode == 13)) && (input!= null) && (input != '')){
                     var tag = '<span id="tag-' + tag_uuid + '" class="badge badge-secondary mr-1">#' + input + ' <img src="icons/x-circle-white.svg" alt="" title="Bootstrap" style="cursor:pointer;" onclick="$.fn.removeTag(' + tag_uuid_with_quotes + ')"></span>';
                     $('#tag-field').append(tag);
-                    $('#discourse-tags').val('');
+                    $('#roundtable-tags').val('');
                     tags.push(input);
-                    $('#discourse-tags').removeClass('is-invalid');
-                    $('#discourse-tags').addClass('is-valid');
+                    $('#roundtable-tags').removeClass('is-invalid');
+                    $('#roundtable-tags').addClass('is-valid');
                  }
             });
-            
-            var discourse_creation_in_progress = false;
-            
-            $('#create-discourse').click(function(){
+
+            var roundtable_creation_in_progress = false;
+
+            $('#create-roundtable').click(function(){
                 //verify form
                 var errors = 0;
-                
-                var discourse_name = $('#discourse-name').val();
-                if(discourse_name.trim() == '' || discourse_name == null){
+
+                var roundtable_name = $('#roundtable-name').val();
+                if(roundtable_name.trim() == '' || roundtable_name == null){
                     errors += 1;
-                    $('#discourse-name').addClass('is-invalid');
-                    $('#discourse-name').tooltip({title: 'Discourse name cannot be empty!'});
-                    $('#discourse-name').tooltip('show');
+                    $('#roundtable-name').addClass('is-invalid');
+                    $('#roundtable-name').tooltip({title: 'Roundtable name cannot be empty!'});
+                    $('#roundtable-name').tooltip('show');
                     setTimeout(function(){
-                        $('#discourse-name').tooltip('dispose');
+                        $('#roundtable-name').tooltip('dispose');
                     }, 3000);
-                }else if(discourse_name.trim().length > 100){
-                    $('#discourse-name').addClass('is-invalid');
-                    $('#discourse-name').tooltip({title: 'Discourse name cannot exceed 100 characters.'});
-                    $('#discourse-name').tooltip('show');
+                }else if(roundtable_name.trim().length > 100){
+                    $('#roundtable-name').addClass('is-invalid');
+                    $('#roundtable-name').tooltip({title: 'Roundtable name cannot exceed 100 characters.'});
+                    $('#roundtable-name').tooltip('show');
                     setTimeout(function(){
-                        $('#discourse-name').tooltip('dispose');
+                        $('#roundtable-name').tooltip('dispose');
                     }, 3000);
                 }
-                
-                var discourse_description = $('#discourse-description').val();
-                if(discourse_description.length > 180){
+
+                var roundtable_description = $('#roundtable-description').val();
+                if(roundtable_description.length > 180){
                     errors += 1;
-                    $('#discourse-description').addClass('is-invalid');
-                    $('#discourse-description').tooltip({title: 'Discourse description cannot exceed 180 characters.'});
-                    $('#discourse-description').tooltip('show');
+                    $('#roundtable-description').addClass('is-invalid');
+                    $('#roundtable-description').tooltip({title: 'Roundtable description cannot exceed 180 characters.'});
+                    $('#roundtable-description').tooltip('show');
                     setTimeout(function(){
-                        $('#discourse-description').tooltip('dispose');
+                        $('#roundtable-description').tooltip('dispose');
                     }, 3000);;
                 }
-                
+
                 if(tags.length == 0){
                     errors += 1;
-                    $('#discourse-tags').addClass('is-invalid');
-                    $('#discourse-tags').tooltip({title: 'You must provide at least one tag.'});
-                    $('#discourse-tags').tooltip('show');
+                    $('#roundtable-tags').addClass('is-invalid');
+                    $('#roundtable-tags').tooltip({title: 'You must provide at least one tag.'});
+                    $('#roundtable-tags').tooltip('show');
                     setTimeout(function(){
-                        $('#discourse-tags').tooltip('dispose');
+                        $('#roundtable-tags').tooltip('dispose');
                     }, 3000);;
                 }
-                
+
                 var server_JID = null;
                 var server_LID = null;
                 if(errors == 0){
-                    //create the discourse
+                    //create the roundtable
                     if($('#public-join').hasClass('btn-primary')){
                         var join_visibility = 'public';
                     }else{
                         var join_visibility = 'private';
                         server_JID = join_id;
                     }
-                    
+
                     if($('#public-listen').hasClass('btn-primary')){
                         var listen_visibility = 'public';
                     }else{
                         var listen_visibility = 'private';
                         server_LID = listen_id;
                     }
-                    
+
                     var max_allowed_participants = $('#max-allowed-participants-select').val();
-                    
-                    var discourse_info_array = {
-                                           "discourse-name": discourse_name,
-                                           "discourse-description": discourse_description, 
-                                           "discourse-tags": tags,
+
+                    var roundtable_info_array = {
+                                           "roundtable-name": roundtable_name,
+                                           "roundtable-description": roundtable_description,
+                                           "roundtable-tags": tags,
                                            "join-visibility": join_visibility,
                                            "listen-visibility": listen_visibility,
-                                           "discourse_JID": server_JID,
-                                           "discourse_LID": server_LID,
+                                           "roundtable_JID": server_JID,
+                                           "roundtable_LID": server_LID,
                                            "max-allowed-participants": max_allowed_participants
                                           }
-                    
-                    $('#create-discourse').html('Creating Discourse...');
-                    
-                    if(discourse_creation_in_progress == false){
-                        discourse_creation_in_progress = true;
-                        socket.emit('create_discourse', discourse_info_array, function(err,data){
+
+                    $('#create-roundtable').html('Creating Roundtable...');
+
+                    if(roundtable_creation_in_progress == false){
+                        roundtable_creation_in_progress = true;
+                        socket.emit('create_roundtable', roundtable_info_array, function(err,data){
                             if(err != 'error'){
                                 var data_to_store = {
                                     "JID": server_JID,
@@ -429,19 +429,19 @@
                                     "LID_secret": data['LID_secret']
                                 }
                                 localStorage.setItem(data['UDI'], JSON.stringify(data_to_store));
-                                window.location.href = 'https://roundtable.audio/live/' + data['UDI'];
+                                window.location.href = base_domain + '/live/' + data['UDI'];
                             }
                         });
                     }
                 }
             });
-            
+
             $.fn.closeModalOpenModal = function(closeModal, openModal){
                 $(closeModal).modal("hide");
                 $(openModal).modal("show");
             }
         });
-            
+
       </script>
     <!-- Global site tag (gtag.js) - Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8HXLM8XEYN"></script>
@@ -454,12 +454,12 @@
     </script>
   </head>
   <body>
-    
+
     <div id="alerts" style="position:absolute;width:100%;">
     <div id="deviceBrowserAlertContainer"></div>
     <div id="featureAlert"> <div id="featureAlert" class="alert alert-primary alert-dismissible fade show" role="alert" style="margin: 0px;"> <strong>New! </strong>Mention <a href="https://twitter.com/DiscourseFm" target="_blank">@DiscourseFm</a> anywhere on Twitter and include the words "start a discourse". We'll automatically reply with a link to a freshly-created discourse. <button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">&times;</span></button></div></div>
     </div>
-      
+
     <nav class="navbar fixed-bottom navbar-light" style="background-color: #6c757d; float:none; display: inline-block; text-align: center;">
         <a href="#" style="color:white" data-toggle="modal" data-target="#aboutModal">About</a>
         <span style="color:white">&#183;</span>
@@ -475,39 +475,38 @@
         <span style="color:white">&#183;</span>
         <span style="color:white">&copy; 2021</span>
     </nav>
-      
+
     <div class="container min-vh-100">
       <div class="row min-vh-100 justify-content-center align-items-center">
         <div class="column col-md-12"> <!-- class="text-center" -->
             <h1 class="display-3">D<img src="icons/radio-rainbow-with-circle.svg" style="height:50px;position: relative;top:2px;vertical-align: baseline;" />scourse.fm<sup>*</sup></h1>
-            <p><sup>*</sup>To avoid confusion with <a href="https://www.discourse.org/" target="_blank">discourse.org</a>, we'll be changing our name soon. <a href="https://twitter.com/DiscourseFm" target="_blank">Follow us on Twitter</a> for updates on this.</p>
             <h3>Live, broadcasted audio chat rooms to <span id="textchanger">learn something new.</span></h3>
             <h5>
-                <span id="find_public_discourses" style="color:#007bff; cursor: pointer;">Find a public discourse</span>, 
-                <span id="new_discourse" style="color:#28a745;cursor: pointer;" data-toggle="modal" data-target="#newDiscourseModal"> start a new one</span>, or
+                <span id="find_public_roundtables" style="color:#007bff; cursor: pointer;">Find a public roundtable</span>,
+                <span id="new_roundtable" style="color:#28a745;cursor: pointer;" data-toggle="modal" data-target="#newRoundtableModal"> start a new one</span>, or
                 <span id="browse_communities" style="color:#ffc107;cursor: pointer;" data-toggle="modal" data-target="#browseCommunitiesModal"> browse our communities.</span>
             </h5>
             <br>
-            <p id="noPublicDiscourses" style="display:none">There are no public discourses to display right now - start a new discourse to get the conversation going!</p>
-            <div class="card-columns" id="discourseCards">
+            <p id="noPublicRoundtables" style="display:none">There are no public roundtables to display right now - start a new roundtable to get the conversation going!</p>
+            <div class="card-columns" id="roundtableCards">
 
             </div>
         </div>
       </div>
-    
+
 <!--
       <div class="row justify-content-center align-items-center">
         <h3>Share your ideas with the world in live, broadcasted audio chat rooms.</h3>
-        <h5>Listen to a public discourse below, or start a new one.</h5>
+        <h5>Listen to a public roundtable below, or start a new one.</h5>
       </div>
 -->
     </div>
-      
-    <div class="modal fade" id="newDiscourseModal" tabindex="-1" aria-labelledby="newDiscourseModalLabel" aria-hidden="true">
+
+    <div class="modal fade" id="newRoundtableModal" tabindex="-1" aria-labelledby="newRoundtableModalLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="newDiscourseModalLabel">Start a New Discourse</h5>
+            <h5 class="modal-title" id="newRoundtableModalLabel">Start a New Roundtable</h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
@@ -515,27 +514,27 @@
           <div class="modal-body">
             <form>
               <div class="form-group">
-                <label for="discourse-name" class="col-form-label">Discourse Name: </label>
-                <input type="text" class="form-control" id="discourse-name" placeholder="The Sailor's Quest" required>
+                <label for="roundtable-name" class="col-form-label">Roundtable Name: </label>
+                <input type="text" class="form-control" id="roundtable-name" placeholder="The Sailor's Quest" required>
               </div>
               <div class="form-group">
-                <label for="discourse-description" class="col-form-label">Description (<span id="discourse-description-character-count">180</span> characters remaining): </label>
-                <textarea class="form-control" id="discourse-description" placeholder="Why? Because big boats."></textarea>
+                <label for="roundtable-description" class="col-form-label">Description (<span id="roundtable-description-character-count">180</span> characters remaining): </label>
+                <textarea class="form-control" id="roundtable-description" placeholder="Why? Because big boats."></textarea>
               </div>
               <div class="form-group">
-                <label for="discourse-tags" class="col-form-label">Tags (add at least one): </label>
-                <input type="text" class="form-control" id="discourse-tags" placeholder="#nautical #exploration #badpuns" required>
+                <label for="roundtable-tags" class="col-form-label">Tags (add at least one): </label>
+                <input type="text" class="form-control" id="roundtable-tags" placeholder="#nautical #exploration #badpuns" required>
                 <h4 id="tag-field" class="mt-3"></h4>
               </div>
               <div class="btn-group" data-toggle="buttons">
                 <label id="public-join" class="btn btn-primary">
-                 <input type="radio" name="options" id="public-join" style="display:none;"> Public to Join as a Participant 
+                 <input type="radio" name="options" id="public-join" style="display:none;"> Public to Join as a Participant
                 </label>
                 <label id="private-join" class="btn btn-outline-primary" >
-                 <input type="radio" name="options" id="private-join" style="display:none;"> Private to Join as a Participant 
+                 <input type="radio" name="options" id="private-join" style="display:none;"> Private to Join as a Participant
                 </label>
               </div>
-                
+
                 <div class="form-group" id="join-link" style="display: none;">
                     <label for="join-link-text">Private Join Link:</label>
                     <div class="input-group mb-3">
@@ -549,16 +548,16 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="btn-group" data-toggle="buttons">
                 <label id="public-listen" class="btn btn-primary">
                  <input type="radio" name="options" id="public-listen" style="display:none;"> Public to Join as a Listener
                 </label>
                 <label id="private-listen" class="btn btn-outline-primary">
-                 <input type="radio" name="options" id="private-listen" style="display:none;"> Private to Join as a Listener 
+                 <input type="radio" name="options" id="private-listen" style="display:none;"> Private to Join as a Listener
                 </label>
               </div>
-                
+
                 <div class="form-group" id="listen-link" style="display: none;">
                     <label for="listen-link-text">Private Listen Link:</label>
                     <div class="input-group mb-3">
@@ -572,7 +571,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="max-allowed-participants-select">Maximum Allowed Participants:</label>
                     <select class="form-control" id="max-allowed-participants-select">
@@ -587,35 +586,35 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" id="create-discourse">Create Discourse</button>
+            <button type="button" class="btn btn-primary" id="create-roundtable">Create Roundtable</button>
           </div>
         </div>
       </div>
     </div>
-      
-    <div class="modal fade" id="browseCommunitiesModal" tabindex="-1" aria-labelledby="newDiscourseModalLabel" aria-hidden="true">
+
+    <div class="modal fade" id="browseCommunitiesModal" tabindex="-1" aria-labelledby="newRoundtableModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
               <div class="modal-header">
-                <h5 class="modal-title" id="newDiscourseModalLabel">Our Communities</h5>
+                <h5 class="modal-title" id="newRoundtableModalLabel">Our Communities</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                   <span aria-hidden="true">&times;</span>
                 </button>
               </div>
               <div class="modal-body">
-              Recently, we launched the ability to use discourse.fm to launch audio-first communities. Our first experimental demo of this feature is <a href="https://hackernews.discourse.fm">hackernews.discourse.fm</a>, which pulls stories live from <a href="news.ycombinator.com" target="_blank">Y Combinator's Hacker News</a>. 
+              Recently, we launched the ability to use roundtable.fm to launch audio-first communities. Our first experimental demo of this feature is <a href="https://hackernews.roundtable.audio">hackernews.roundtable.fm</a>, which pulls stories live from <a href="news.ycombinator.com" target="_blank">Y Combinator's Hacker News</a>.
               <br><br>
-              If you're interested in setting up an audio-first community using discourse.fm - or simply integrating live audio into your product or service - <a href="mailto:info@discourse.fm">let us know.</a>
+              If you're interested in setting up an audio-first community using roundtable.fm - or simply integrating live audio into your product or service - <a href="mailto:info@discourse.fm">let us know.</a>
             </div>
           </div>
         </div>
     </div>
-      
+
     <div class="modal fade" id="aboutModal" tabindex="-1" aria-labelledby="aboutModalLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="aboutDiscourseModalLabel">About Discourse.fm</h5>
+                <h5 class="modal-title" id="aboutRoundtableModalLabel">About Roundtable.audio</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                   <span aria-hidden="true">&times;</span>
                 </button>
@@ -623,17 +622,17 @@
             <div class="modal-body">
                 <p>Since ancient times, humans have relied on spoken language to collaborate, organize, and connect with one another. But in recent times, much of our meaningful dialogue has been locked away in written text on the internet - taking the form of email, social media posts, comment sections, and instant messages. And even when we do speak online, it's often controlled or moderated by one individual or organization. In many ways, we've lost our ability to simply speak with one another at all, causing unprecented political divide and a decline in social relationships.
                 <br><br>
-                Discourse.fm is meant to be the simplest decentralized conversation tool on the internet. We don't expect to fix the entirety of the above problem, but we want to provide a tool that can at least get the conversation going. 
-                <br><br>    
-                To get started, simply create or join a discourse and let your voice be heard. Or to understand more of what you can do with Discourse.fm, head over to the <a onclick="$.fn.closeModalOpenModal('#aboutModal', '#FAQModal');" href="#">FAQ</a> section. 
+                Roundtable.audio is meant to be the simplest decentralized conversation tool on the internet. We don't expect to fix the entirety of the above problem, but we want to provide a tool that can at least get the conversation going.
                 <br><br>
-                Discourse.fm is a blend of Node, Golang, and native Javascript. It was built on top of <a href="https://github.com/pion/">Pion</a> and <a href="https://github.com/MixinNetwork/kraken/">Kraken</a> - special thanks to these open-source projects/communities.
+                To get started, simply create or join a roundtable and let your voice be heard. Or to understand more of what you can do with Roundtable.audio, head over to the <a onclick="$.fn.closeModalOpenModal('#aboutModal', '#FAQModal');" href="#">FAQ</a> section.
+                <br><br>
+                Roundtable.audio is a blend of Node, Golang, and native Javascript. It was built on top of <a href="https://github.com/pion/">Pion</a> and <a href="https://github.com/MixinNetwork/kraken/">Kraken</a> - special thanks to these open-source projects/communities.
                 </p>
             </div>
         </div>
-      </div> 
-    </div>  
-    
+      </div>
+    </div>
+
     <div class="modal fade" id="FAQModal" tabindex="-1" aria-labelledby="FAQModalLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -644,12 +643,12 @@
                 </button>
             </div>
             <div class="modal-body">
-                <h3>What is Discourse.fm?</h3>
+                <h3>What is Roundtable.fm?</h3>
                 <p>A platform for live, decentralized, broadcasted audio conferencing.</p>
                 <h3>What can I do with it?</h3>
-                <p>Quite a bit. Like a podcast, you can use it as a stage for dialogue. Like a radio station, you can use it to project a message to a wide audience. Discourses can also be private, meaning they can be used for closed hangouts, meetings, and much more.</p>
-                <h3>What is the distinction between a public and private discourse?</h3>
-                <p>A discourse can be: </p>
+                <p>Quite a bit. Like a podcast, you can use it as a stage for dialogue. Like a radio station, you can use it to project a message to a wide audience. Roundtables can also be private, meaning they can be used for closed hangouts, meetings, and much more.</p>
+                <h3>What is the distinction between a public and private roundtable?</h3>
+                <p>A roundtable can be: </p>
                     <ul>
                     <li>public to join and listen to</li>
                     <li>private to join, but public to listen to</li>
@@ -657,46 +656,46 @@
                     </ul>
                 <p>With these options it provides complete privacy if desired or a powerful stage to project ideas.</p>
                 <h3>What do you mean by "decentralized?"</h3>
-                <p>A discourse has no moderator. If there are multiple participants, no one person has the ability to mute or kick any one person for the rest of the group. This removes any power dynamic and creates a balance of power between all participants. It has nothing to do with blockchain technology if that's what you thought we meant (at least not yet).</p>
+                <p>A roundtable has no moderator. If there are multiple participants, no one person has the ability to mute or kick any one person for the rest of the group. This removes any power dynamic and creates a balance of power between all participants. It has nothing to do with blockchain technology if that's what you thought we meant (at least not yet).</p>
                 <h3>Is it free? Do I have to register?</h3>
-                <p>It is completely free. At the moment, no registration is required to participate in or listen to a discourse.</p>
-                <h3>Are discourses stored? Can I listen to one after it ends?</h3>
-                <p>No. Discourses are live-only, meaning that once a conversation is over, it's over. We believe this takes the pressure off of folks who are eager to share ideas and opinions but afraid of "going-on record." Of course, we cannot stop people from attempting to record the audio through alternative means, so be wary of this.</p>
-                <h3>Are discourses monitored? Am I being listened to by the creators of discourse.fm in a private discourse?</h3>
-                <p>No and no. We are placing trust in you to use discourse.fm with respect, and to follow the community standards/guidlines found in the <a onclick="$.fn.closeModalOpenModal('#FAQModal', '#philosophyModal');" href="#">Philosophy</a> section.</p> 
+                <p>It is completely free. At the moment, no registration is required to participate in or listen to a roundtable.</p>
+                <h3>Are roundtables stored? Can I listen to one after it ends?</h3>
+                <p>No. Roundtables are live-only, meaning that once a conversation is over, it's over. We believe this takes the pressure off of folks who are eager to share ideas and opinions but afraid of "going-on record." Of course, we cannot stop people from attempting to record the audio through alternative means, so be wary of this.</p>
+                <h3>Are Roundtables monitored? Am I being listened to by the creators of roundtable.fm in a private roundtable?</h3>
+                <p>No and no. We are placing trust in you to use roundtable.fm with respect, and to follow the community standards/guidlines found in the <a onclick="$.fn.closeModalOpenModal('#FAQModal', '#philosophyModal');" href="#">Philosophy</a> section.</p>
                 <h3>Was this created in response to Covid-19? Or the current political climate?</h3>
                 <p>Sort of. The original idea was actually conceived in the Fall of 2019 as a way to combat boredom on a long commute, but when lockdown began it was clear this would be a great time to build it. It was made even more apparent in the heat of the political turmoil later in the year. Now, more than ever, people need to be speaking to one another.</p>
             </div>
         </div>
-      </div> 
+      </div>
     </div>
-      
+
     <div class="modal fade" id="philosophyModal" tabindex="-1" aria-labelledby="contactLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="philosophyModalLabel">Discourse.fm Philosophy</h5>
+                <h5 class="modal-title" id="philosophyModalLabel">Roundtable.audio Philosophy</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                   <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                Discourse.fm is meant to be a welcoming environment. People should be able to speak freely and share their opinions, learn new things, and enjoy the company of others. Discourses are not recorded or stored, which removes some of the pressure often associated with written text in online forums. Additionally, the decentralized nature of a discourse - having no moderator - should allow for more free-form discussion without fear of being shut-down. We think these two elements will empower healthy discourse and fun conversations. However, with this power, autonomy, and anonymity, we require community buy-in and respect to make it work.
+                Roundtable.audio is meant to be a welcoming environment. People should be able to speak freely and share their opinions, learn new things, and enjoy the company of others. Roundtable are not recorded or stored, which removes some of the pressure often associated with written text in online forums. Additionally, the decentralized nature of a roundtable - having no moderator - should allow for more free-form discussion without fear of being shut-down. We think these two elements will empower healthy roundtable and fun conversations. However, with this power, autonomy, and anonymity, we require community buy-in and respect to make it work.
                 <br><br>
                 We therefore ask you to do your part and follow some guidelines:
                 <ul>
-                    <li>You may <b>never create discourses which are meant to threaten, disparage, or target individuals or groups</b>. We ask that if you see such a case, please report it to <a href="mailto:info@discourse.fm">info@discourse.fm</a>.</li>
-                    <li>When in a discourse,<b> hate speech is not tolerated in any way, shape or form</b>. We ask that if you are in a discourse where such speech is occurring to leave the discourse and encourage others to do so. If you'd like to keep the conversation going, create a new private discourse without that participant. We think this is a healthier way to discourage this type of behavior without giving centralized power to a moderator.</li>
+                    <li>You may <b>never create roundtables which are meant to threaten, disparage, or target individuals or groups</b>. We ask that if you see such a case, please report it to <a href="mailto:info@discourse.fm">info@discourse.fm</a>.</li>
+                    <li>When in a roundtable,<b> hate speech is not tolerated in any way, shape or form</b>. We ask that if you are in a roundtable where such speech is occurring to leave the roundtable and encourage others to do so. If you'd like to keep the conversation going, create a new private roundtable without that participant. We think this is a healthier way to discourage this type of behavior without giving centralized power to a moderator.</li>
                     <li>Give others the chance to be heard if there is more than one participant. Everyone who has a seat at the table should feel encouraged and included to be a part of the discussion.</li>
                 </ul>
-                If you do your part, we'll do ours. We want to continue to improve the experience of the community and introduce features that empower and encourage meaningful, respectful dialogue. If you have any ideas for improving community standards, we're all ears at <a href="mailto:info@discourse.fm">info@discourse.fm</a>. 
+                If you do your part, we'll do ours. We want to continue to improve the experience of the community and introduce features that empower and encourage meaningful, respectful dialogue. If you have any ideas for improving community standards, we're all ears at <a href="mailto:info@discourse.fm">info@discourse.fm</a>.
                 <br><br>
-                <b>Disclaimer:</b> Discourse.fm does not take any legal responsibility for what is said while using the service, or any outcomes directly or indirectly relating to the conversations while using the service.
+                <b>Disclaimer:</b> Roundtable.audio does not take any legal responsibility for what is said while using the service, or any outcomes directly or indirectly relating to the conversations while using the service.
             </div>
         </div>
-      </div> 
-    </div>  
-    
+      </div>
+    </div>
+
     <div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -710,9 +709,9 @@
                 For now, you can get in touch with any questions, comments, suggestions, or inquiries at <a href="mailto:info@discourse.fm">info@discourse.fm.</a>
             </div>
         </div>
-      </div> 
+      </div>
     </div>
-      
+
     <div class="modal fade" id="upcomingModal" tabindex="-1" aria-labelledby="upcomingLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -723,10 +722,10 @@
                 </button>
             </div>
             <div class="modal-body">
-                We've got big plans for discourse.fm. If you'd like to stay updated on our progress <a href="https://twitter.com/DiscourseFm" target="_blank">follow us on Twitter</a>. 
+                We've got big plans for Roundtable.audio. If you'd like to stay updated on our progress <a href="https://twitter.com/DiscourseFm" target="_blank">follow us on Twitter</a>.
             </div>
         </div>
-      </div> 
+      </div>
     </div>
   </body>
 </html>
