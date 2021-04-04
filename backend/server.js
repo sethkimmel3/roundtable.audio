@@ -109,7 +109,7 @@ io.on('connection', (socket) => {
 
     socket.on('create_roundtable', function(roundtable_data, handler){
         DBUtils.callCreateNewRoundtablePromise(roundtable_data).then(function(res){
-            console.log(res);
+            // console.log(res);
             if("UDI" in res){
                 handler(null, res);
             }else{
@@ -377,7 +377,7 @@ io.on('connection', (socket) => {
                 var localDescription = publish_data['localDescription'];
 
                 krakenAPI.publish(rnameRPC, unameRPC, localDescription).then(function(result){
-                    console.log(result);
+                    // console.log(result);
                     handler('null', result);
                 });
             }else{

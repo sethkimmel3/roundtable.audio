@@ -135,10 +135,10 @@
 
                               var state = '<small><span>' + data[i]['participants'].toString() + ' talking about this - </span> <a href="#" onclick="$.fn.joinOrCreateNewRoundtable(' + i + ')">Join ' + nicknames_string + '</a></small>';
                           }else{
-                              var state = '<small><a href="#" onclick="$.fn.joinOrCreateNewRoundtable(' + i + ')">+ Start a Roundtable About This</a></small>';
+                              var state = '<small><a href="#" onclick="$.fn.joinOrCreateNewRoundtable(' + i + ')">+ Start a Roundtable Here</a></small>';
                           }
                           // add participants array
-                          $('#Roundtable-state-' + i.toString()).html(state);
+                          $('#roundtable-state-' + i.toString()).html(state);
                       }
                   }
               })
