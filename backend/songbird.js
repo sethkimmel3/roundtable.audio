@@ -21,10 +21,10 @@ const {
 } = process.env
 
 var T = new Twit({
-  consumer_key:         CONSUMER_KEY, //'RwXnCUM4ZrDm9zeMtaXFpYOfb'
-  consumer_secret:      CONSUMER_SECRET, //'5P9E8UTXeerWDhZm7D9z4bkgVtoU43vBFXdkt3mV7bEJGHTFpl'
-  access_token:         ACCESS_TOKEN, //'1323445323101052935-frMgvus9pwALWfywtLrVIqhKLr0ojB'
-  access_token_secret:  ACCESS_TOKEN_SECRET, //'osKy4OgOQAFhRPnt32Xi4N1d9eqtjxSvXUe8RjJz90KiU'
+  consumer_key:         CONSUMER_KEY,
+  consumer_secret:      CONSUMER_SECRET,
+  access_token:         ACCESS_TOKEN,
+  access_token_secret:  ACCESS_TOKEN_SECRET,
   timeout_ms:           60*1000,  // optional HTTP request timeout to apply to all requests.
   strictSSL:            true,     // optional - requires SSL certificates to be valid.
 })
