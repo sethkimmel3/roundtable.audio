@@ -17,6 +17,23 @@ services:
      - node_modules:/home/node/app/node_modules
     command: ./wait-for.sh db:27017 -- /home/node/app/node_modules/.bin/nodemon server.js    
 
+  songbird:
+    build: 
+      context: ./backend/
+      dockerfile: Dockerfile.songbird
+    image: songbird
+    container_name: songbird
+    restart: unless-stopped
+    env_file: .env
+    environment: 
+      - TEST_VARIABLE=$TEST_VARIABLE
+    networks: 
+     - app-network
+    volumes: 
+     - ./backend/:/home/node/app
+     - node_modules:/home/node/app/node_modules
+    command: ./wait-for.sh db:27017 -- /home/node/app/node_modules/.bin/nodemon songbird.js
+
   db:
     image: mongo:4.1.8-xenial
     container_name: db
@@ -60,16 +77,14 @@ services:
       context: ./kraken_listen_only/
       dockerfile: Dockerfile
     image: kraken_listen_only
-    container_name: kraken_listen_only
-#    volumes: 
-#     - "./kraken_listen_only/config:./config"
+    container_name: kraken_listen_only 
     ports:
      - "7000:7000"
     restart: unless-stopped
     networks:
      - app-network  
-#    depends_on:
-#     - coturn
+    depends_on:
+     - coturn
 
   certbot:
     image: certbot/certbot
