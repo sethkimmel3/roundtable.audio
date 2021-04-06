@@ -113,7 +113,7 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: /home/seth/discourse.fm/dhparam/
+      device: ./dhparam/
       o: bind
   dbdata:
   node_modules:
