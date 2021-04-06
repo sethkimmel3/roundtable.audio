@@ -447,12 +447,12 @@ io.on('connection', (socket) => {
     });
 
     socket.on('getActiveRoundtables', function(data, handler){
-        try {
+	try {
             var dbo = mongoUtil.getDb();
             var query = { end_datetime: null, public_listen:true };
             var exclude = {JID:0, JID_secret:0, LID:0, LID_secret:0, RID:0, max_participants:0, max_listeners:0, _id:0};
             dbo.collection("roundtableList").find(query).project(exclude).toArray(function(e, res){
-                handler(null, res);
+		handler(null, res);
             })
         } catch(err){
             handler(err, null);
