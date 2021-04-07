@@ -127,28 +127,28 @@
                 });
             }
 
-            var rtc = function(timestamp){
-               var words = ['share your ideas.',
-                         'learn something new.',
-                         'debate a topic.',
-                         'host an interview.',
-                         'catch up with friends.',
-                         'meet new people.',
-                         'start a live podcast.',
-                         'find inspiration.',
-                         'bridge the divide.',
-                         'promote your brand.',
-                         'reconnect with the world.',
-                         'drive the conversation forward.'];
-               var i = Math.floor(Math.random() * Math.floor(words.length));
-               $('#textchanger').html(words[i]).fadeTo(1500, 1, function(){
-                    $('#textchanger').fadeTo(1500, 0, function(){
-                        window.requestAnimationFrame(rtc);
-                    })
-               })
-            }
-
-             window.requestAnimationFrame(rtc);
+            // var rtc = function(timestamp){
+            //    var words = ['share your ideas.',
+            //              'learn something new.',
+            //              'debate a topic.',
+            //              'host an interview.',
+            //              'catch up with friends.',
+            //              'meet new people.',
+            //              'start a live podcast.',
+            //              'find inspiration.',
+            //              'bridge the divide.',
+            //              'promote your brand.',
+            //              'reconnect with the world.',
+            //              'drive the conversation forward.'];
+            //    var i = Math.floor(Math.random() * Math.floor(words.length));
+            //    $('#textchanger').html(words[i]).fadeTo(1500, 1, function(){
+            //         $('#textchanger').fadeTo(1500, 0, function(){
+            //             window.requestAnimationFrame(rtc);
+            //         })
+            //    })
+            // }
+            //
+            // window.requestAnimationFrame(rtc);
 
             // handle adding existing roundtables
             $.fn.addRoundtableCard = function(title, tag_list, description, n_participants, n_listeners, public_join, public_listen, UDI){
@@ -482,11 +482,12 @@
             <h1 class="display-3">roundtable.audio
 	    <!--<img src="icons/radio-rainbow-with-circle.svg" style="height:50px;position: relative;top:2px;vertical-align: baseline;" />
 	    </h1>-->
-            <h3>Live, broadcasted audio chat rooms to <span id="textchanger">learn something new.</span></h3>
+            <!-- <h3>Live, broadcasted audio chat rooms to <span id="textchanger">learn something new.</span></h3> -->
+            <h3>Live, unmoderated audio chat rooms to discuss anything on the internet.</h3>
             <h5>
-                <span id="find_public_roundtables" style="color:#007bff; cursor: pointer;">Find a public roundtable</span>,
-                <span id="new_roundtable" style="color:#28a745;cursor: pointer;" data-toggle="modal" data-target="#newRoundtableModal"> start a new one</span>, or
-                <span id="browse_communities" style="color:#ffc107;cursor: pointer;" data-toggle="modal" data-target="#browseCommunitiesModal"> browse our communities.</span>
+                <span id="find_public_roundtables" style="color:#007bff; cursor: pointer;">View current roundtables</span>,
+                <span id="new_roundtable" style="color:#28a745;cursor: pointer;" data-toggle="modal" data-target="#newRoundtableModal"> start a fresh one</span>, or
+                <span id="browse_sources" style="color:#ffc107;cursor: pointer;" data-toggle="modal" data-target="#browseSourcesModal"> learn about sources.</span>
             </h5>
             <br>
             <p id="noPublicRoundtables" style="display:none">There are no public roundtables to display right now - start a new roundtable to get the conversation going!</p>
@@ -594,19 +595,41 @@
       </div>
     </div>
 
-    <div class="modal fade" id="browseCommunitiesModal" tabindex="-1" aria-labelledby="newRoundtableModalLabel" aria-hidden="true">
+    <div class="modal fade" id="browseSourcesModal" tabindex="-1" aria-labelledby="newRoundtableModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
               <div class="modal-header">
-                <h5 class="modal-title" id="newRoundtableModalLabel">Our Communities</h5>
+                <h5 class="modal-title" id="newRoundtableModalLabel">Our Sources</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                   <span aria-hidden="true">&times;</span>
                 </button>
               </div>
               <div class="modal-body">
-              Recently, we launched the ability to use roundtable.fm to launch audio-first communities. Our first experimental demo of this feature is <a href="https://hackernews.roundtable.audio">hackernews.roundtable.fm</a>, which pulls stories live from <a href="news.ycombinator.com" target="_blank">Y Combinator's Hacker News</a>.
+              While roundtables can be used for any adhoc conversation, it can be more interesting to discuss a particular piece of content on the web which would otherwise be trapped in text.
+              Currently, there are two sources we've integrated into Roundtable.
               <br><br>
-              If you're interested in setting up an audio-first community using roundtable.fm - or simply integrating live audio into your product or service - <a href="mailto:info@roundtable.audio">let us know.</a>
+              <div style="text-align:center">
+                <img src="icons/brands/2021 Twitter logo - blue.png" style="height:100px;width:auto" />
+              </div>
+              <br>
+              You can turn any Tweet thread into a roundtable by simply tweeting @roundtable_bot and including the words "start a roundtable". Our bot will automatically generate a new roundtable and reply to you on Twitter with the link. This can be a tweet of your own, or in a reply to someone else.
+              Pretty cool, right?
+              <br>
+              <div style="text-align:center">
+                <img src="icons/brands/Hackernews_logo.png" style="height:30px;width:auto"/>
+              </div>
+              <br>
+              Y Combinator's <a href="news.ycombinator.com" target="_blank">Hacker News</a> is a great place to find and post interesting stories pertaining to science, technology, entrepreneurship, and more.
+              We built <a href="https://hackernews.roundtable.audio">hackernews.roundtable.audio</a> which emulates and collects stories directly from the Hacker News site.
+              All roundtables here are public, and you can paste the link back to the comments on the actual Hacker News site to invite participants.
+              <br><br>
+              <h3>Future Sources</h3>
+              Eventually, we'd like to add more sources including subreddits, popular news sites, and other places where people gather primarily around text in real-time.
+              This may take the form of browser extensions, embeddable UI's, or something else.
+              Want to contribute? Become a contributor to the open source project on Github, or <a href="mailto:info@roundtable.audio">reach out.</a>
+              <br><br>
+              <h3>Your Thing as a Source</h3>
+              If you're interested in integrating roundtable into your community, blog, or whatever else you've built, <a href="mailto:info@roundtable.audio">let us know.</a> We'd be happy to hear what you're thinking.
             </div>
           </div>
         </div>
@@ -645,7 +668,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                <h3>What is Roundtable.fm?</h3>
+                <h3>What is Roundtable.audio?</h3>
                 <p>A platform for live, decentralized, broadcasted audio conferencing.</p>
                 <h3>What can I do with it?</h3>
                 <p>Quite a bit. Like a podcast, you can use it as a stage for dialogue. Like a radio station, you can use it to project a message to a wide audience. Roundtables can also be private, meaning they can be used for closed hangouts, meetings, and much more.</p>
@@ -658,15 +681,19 @@
                     </ul>
                 <p>With these options it provides complete privacy if desired or a powerful stage to project ideas.</p>
                 <h3>What do you mean by "decentralized?"</h3>
-                <p>A roundtable has no moderator. If there are multiple participants, no one person has the ability to mute or kick any one person for the rest of the group. This removes any power dynamic and creates a balance of power between all participants. It has nothing to do with blockchain technology if that's what you thought we meant (at least not yet).</p>
+                <p>A roundtable has no moderator. If there are multiple participants, no one person has the ability to mute or kick any one person for the rest of the group. This removes any power dynamic and creates a balance of power between all participants. It has nothing to do with blockchain technology (yet) if that's what you thought we meant.</p>
                 <h3>Is it free? Do I have to register?</h3>
                 <p>It is completely free. At the moment, no registration is required to participate in or listen to a roundtable.</p>
                 <h3>Are roundtables stored? Can I listen to one after it ends?</h3>
                 <p>No. Roundtables are live-only, meaning that once a conversation is over, it's over. We believe this takes the pressure off of folks who are eager to share ideas and opinions but afraid of "going-on record." Of course, we cannot stop people from attempting to record the audio through alternative means, so be wary of this.</p>
-                <h3>Are Roundtables monitored? Am I being listened to by the creators of roundtable.fm in a private roundtable?</h3>
-                <p>No and no. We are placing trust in you to use roundtable.fm with respect, and to follow the community standards/guidlines found in the <a onclick="$.fn.closeModalOpenModal('#FAQModal', '#philosophyModal');" href="#">Philosophy</a> section.</p>
+                <h3>Are roundtables monitored? Am I being listened to by the creators of roundtable.audio in a private roundtable?</h3>
+                <p>No and no. We are placing trust in you to use roundtable.audio with respect, and to follow the community standards/guidlines found in the <a onclick="$.fn.closeModalOpenModal('#FAQModal', '#philosophyModal');" href="#">Philosophy</a> section.</p>
                 <h3>Was this created in response to Covid-19? Or the current political climate?</h3>
                 <p>Sort of. The original idea was actually conceived in the Fall of 2019 as a way to combat boredom on a long commute, but when lockdown began it was clear this would be a great time to build it. It was made even more apparent in the heat of the political turmoil later in the year. Now, more than ever, people need to be speaking to one another.</p>
+                <h3>Is this just another copy of Clubhouse?</h3>
+                <p>Fair question, but no. This project has been in progress since before the creators even heard of Clubhouse.</p>
+                <h3>Why does this look familiar?</h3>
+                <p>We recently changed our name from discourse.fm to roundtable.audio. Maybe you've seen it before. <p>
             </div>
         </div>
       </div>
@@ -686,7 +713,7 @@
                 <br><br>
                 We therefore ask you to do your part and follow some guidelines:
                 <ul>
-                    <li>You may <b>never create roundtables which are meant to threaten, disparage, or target individuals or groups</b>. We ask that if you see such a case, please report it to <a href="mailto:info@roundtable.audio">info@roundtable.fm</a>.</li>
+                    <li>You may <b>never create roundtables which are meant to threaten, disparage, or target individuals or groups</b>. We ask that if you see such a case, please report it to <a href="mailto:info@roundtable.audio">info@roundtable.audio</a>.</li>
                     <li>When in a roundtable,<b> hate speech is not tolerated in any way, shape or form</b>. We ask that if you are in a roundtable where such speech is occurring to leave the roundtable and encourage others to do so. If you'd like to keep the conversation going, create a new private roundtable without that participant. We think this is a healthier way to discourage this type of behavior without giving centralized power to a moderator.</li>
                     <li>Give others the chance to be heard if there is more than one participant. Everyone who has a seat at the table should feel encouraged and included to be a part of the discussion.</li>
                 </ul>
@@ -724,7 +751,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                We've got big plans for Roundtable.audio. If you'd like to stay updated on our progress <a href="https://twitter.com/DiscourseFm" target="_blank">follow us on Twitter</a>.
+                If you'd like to stay updated on our progress <a href="https://twitter.com/DiscourseFm" target="_blank">follow us on Twitter</a>.
             </div>
         </div>
       </div>
