@@ -3,11 +3,9 @@
 
 ## Sources
 While it's possible to start ad-hoc roundtables about anything, part of what differentiates roundtable.audio is integrating external sources to populate discussion topics. Currently, the only sources are:
-<ul>
-<li> Twitter: you can start a roundtable by tweeting at the roundtable Twitter bot from any tweet thread and including the words "start a roundtable." Give it a try and see what happens! </li>
-<li> [Y Combinator's Hacker News](https://news.ycombinator.com/): For the Hacker News integration, you can visit [hackernews.roundtable.audio](https://hackernews.roundtable.audio) to see a page which intends to emulate the Hacker News homepage, but rather than having a comment section for each story, you can pop into a roundtable.
-</li>
-</ul>
+
+* Twitter: you can start a roundtable by tweeting at the roundtable Twitter bot from any tweet thread and including the words "start a roundtable." Give it a try and see what happens! 
+* [Y Combinator's Hacker News](https://news.ycombinator.com/): For the Hacker News integration, you can visit [hackernews.roundtable.audio](https://hackernews.roundtable.audio) to see a page which intends to emulate the Hacker News homepage, but rather than having a comment section for each story, you can pop into a roundtable.
 I'd like to eventually have sources for subreddits, popular news sites, other web-based communities, and more. Wherever people are synchronously talking via text on the web, it can probably benefit from the addition of roundtables/live audio.
 
 ## Contributing
