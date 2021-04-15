@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <link rel="shortcut icon" href="../../icoicon.ico">
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+    <title>Hackernews Roundtable</title>
+  <style>
+      body{
+          font-family: Verdana, Geneva, sans-serif;
+          font-size: 13.33px;
+      }
+  </style>
+      <script src="../../js/socket.io-client/dist/socket.io.js"></script>
+      <script src="../../js/mobile-browser-check.js"></script>
+      <script src="../../js/clipboard/dist/clipboard.min.js"></script>
+      <script>
+        $( document ).ready(function() {
+          const node_conn = "https://roundtable.audio";
+          var socket = io.connect(node_conn);
+
+          // add base domain
+          const base_domain = "https://hackernews.roundtable.audio";
+
+          // Add a connect listener
+          socket.on('connect',function() {
+            console.log('Client has connected to the server!');
+          });
+
+          var isIncompatibleBrowser = $.fn.isIncompatibleBrowser();
+
+          if(isIncompatibleBrowser){
+            $('#deviceBrowserAlertContainer').html('<div id="deviceBrowserAlert" class="alert alert-warning alert-dismissible fade show" role="alert" style="margin: 0px;"> <strong>Hold up!</strong> It looks like you may be using an incompatible device and browser. Roundtable.audio will not work on iOS Chrome or iOS Firefox at the moment. For best results, we recommend using desktop Chrome. <button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">&times;</span></button></div>');
+          }
+
+          new ClipboardJS('#join-link-button');
+          new ClipboardJS('#listen-link-button');
+
+          function timeSince(date) {
+            var seconds = Math.floor((new Date() - date) / 1000);
+
+            var interval = seconds / 31536000;
+
+            if (interval > 1) {
+              return Math.floor(interval) + " years";
+            }
+            interval = seconds / 2592000;
+            if (interval > 1) {
+              return Math.floor(interval) + " months";
+            }
+            interval = seconds / 86400;
+            if (interval > 1) {
+              return Math.floor(interval) + " days";
+            }
+            interval = seconds / 3600;
+            if (interval > 1) {
+              return Math.floor(interval) + " hours";
+            }
+            interval = seconds / 60;
+            if (interval > 1) {
+              return Math.floor(interval) + " minutes";
+            }
+            return Math.floor(seconds) + " seconds";
+          }
+
+          let stories = [];
+
+          $.fn.addStories = function(stories){
+              $('#stories').empty();
+              for(var i = 0; i < stories.length; i++){
+                  var story = stories[i];
+                  if(story != null){
+                      var author = story.by;
+                      var time_since = timeSince(new Date(story.time * 1000));
+                      var HN_url = 'https://news.ycombinator.com/item?id=' + story.id.toString();
+                      if(story.url != null){
+                          var story_url = story.url;
+                          var domain_add = '<small style="color:grey"> (' + story.url.match(/^(?:https?:\/\/)?(?:[^@\n]+@)?(?:www\.)?([^:\/\n?]+)/img).toString().replace(/^(?:https?:\/\/)?(?:www\.)?/i, '') + ')</small>';
+                      }else{
+                          var story_url = HN_url;
+                          var domain_add = '';
+                      }
+                      var el = '<div class="story" style=""><table><td style="vertical-align: top;"><span style="color:grey;">' + (i + 1).toString() +  '.</span></td><td><a href="' + story_url + '" target="_blank" style="text-decoration:none;color:black;"><span>' + story.title + '</span></a>' + domain_add + '<br><small style="color:grey;">' + story.score.toString() + ' points by <a href="https://news.ycombinator.com/user?id=' + story.by + '" target="_blank" style="color:grey;">' + story.by + '</a> ' + time_since + '</small><br><div id="roundtable-state-' + i.toString() + '"></div></td></table></div>';
+                      $('#stories').append(el);
+                  }
+              }
+              $.fn.getStoriesParticipantsAndListeners(stories);
+          }
+
+          $.fn.getStories = function(type){
+              stories = [];
+              var stories_url = "https://hacker-news.firebaseio.com/v0/" + type + "stories.json?print=pretty";
+              $.get(stories_url, function(data, status){
+                 for(var i = 0; i < 30; i++){
+                     var story_url = "https://hacker-news.firebaseio.com/v0/item/" + data[i] + ".json?print=pretty";
+                     const story_num = i;
+                     $.get(story_url, function(story_data, story_status){
+                         stories[story_num] = story_data;
+                         if(stories.length == 30){
+                             $.fn.addStories(stories);
+                         }
+                     });
+                 }
+              });
+          }
+
+          $.fn.getStoriesParticipantsAndListeners = function(stories){
+              var story_data = {
+                  "stories": stories,
+                  "community": 'hackernews'
+              }
+              socket.emit('getStoriesParticipantsAndListeners', story_data, function(err,data){
+                  if(err == null){
+                      console.log(data);
+                      for(var i = 0; i < data.length; i++){
+                          if(data[i]['started'] == true && data[i]['participants'] > 0){
+                              if(data[i]['nicknames'].length == 1){
+                                  var nicknames_string = data[i]['nicknames'][0];
+                              }else if(data[i]['nicknames'].length == 2){
+                                  var nicknames_string = data[i]['nicknames'][0] + ' and ' + data[i]['nicknames'][1];
+                              }else if(data[i]['nicknames'].length == 3){
+                                  var nicknames_string = data[i]['nicknames'][0] + ', ' + data[i]['nicknames'][1] + ', and ' + data[i]['nicknames'][2];
+                              }else{
+                                  var nicknames_string = 'Roundtable in Progress';
+                              }
+
+                              var state = '<small><span>' + data[i]['participants'].toString() + ' talking about this - </span> <a href="#" onclick="$.fn.joinOrCreateNewRoundtable(' + i + ')">Join ' + nicknames_string + '</a></small>';
+                          }else{
+                              var state = '<small><a href="#" onclick="$.fn.joinOrCreateNewRoundtable(' + i + ')">+ Start a Roundtable Here</a></small>';
+                          }
+                          // add participants array
+                          $('#roundtable-state-' + i.toString()).html(state);
+                      }
+                  }
+              })
+          }
+
+          $.fn.getStories('top');
+
+          $.fn.joinOrCreateNewRoundtable = function(story_num){
+              var story = stories[story_num];
+              var name = story.title;
+              var HN_url = 'https://news.ycombinator.com/item?id=' + story.id.toString();
+              roundtable_info_array = {
+                  "story_name": name,
+                  "story_url": HN_url,
+                  "community": "hackernews",
+                  "story_id": story.id.toString()
+              }
+              socket.emit('createCommunityRoundtableIfNotExist', roundtable_info_array, function(err,data){
+                  if(err == null){
+                      var roundtable_UDI = data;
+                      window.location.href = base_domain + '/live/' + roundtable_UDI;
+                  }else{
+                      console.log(err);
+                  }
+              });
+          }
+
+          $.fn.getMostActiveStories = function(){
+              var info = {
+                  community: 'hackernews'
+              }
+              socket.emit('getMostActiveStories', info, function(err, data){
+                  if(err == null){
+                      stories = [];
+                      var nulls_removed = data.filter(function (el) {
+                        return el != null;
+                      });
+                      for(var i = 0; i < nulls_removed.length; i++){
+                          var story_url = "https://hacker-news.firebaseio.com/v0/item/" + nulls_removed[i] + ".json?print=pretty";
+                          const story_num = i;
+                          $.get(story_url, function(story_data, story_status){
+                              stories[story_num] = story_data;
+                              if(stories.length == nulls_removed.length){
+                                  $.fn.addStories(stories);
+                              }
+                          });
+                      }
+                      $.fn.addStories(stories);
+                  }
+              })
+          }
+        });
+      </script>
+
+      <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-8HXLM8XEYN"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-8HXLM8XEYN');
+    </script>
+  </head>
+  <body>
+
+    <div id="alerts" style="position:absolute;width:100%;">
+    <div id="deviceBrowserAlertContainer"></div>
+    </div>
+
+    <nav class="navbar navbar-light" style="position:relative; background-color: #ff6600; float:none; width: 100%; text-align: left;">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <a href="https://news.ycombinator.com/" style="color:black;text-decoration: none; cursor:pointer">
+                    <span><b>Hacker News</b></span>
+                </a>
+                <a href="https://roundtable.audio" style="color:black;text-decoration: none; cursor:pointer">
+                    <span style="color:white;"><b>roundtable.audio<sup>*</sup></b></span> |
+                </a>
+                <a href="#" style="color:black;" onclick="$.fn.getStories('top')">Top</a>
+                <span style="">|</span>
+                <a href="#" style="color:black;" onclick="$.fn.getStories('new');">New</a>
+                <span style="">|</span>
+                <a href="#" style="color:black;" onclick="$.fn.getStories('ask');">Ask</a>
+                <span style="">|</span>
+                <a href="#" style="color:black;" onclick="$.fn.getMostActiveStories();">Most Active Roundtables</a>
+                <span style="">|</span>
+                <a href="#" style="color:black;" data-toggle="modal" data-target="#aboutModal"><b>About</b></a>
+                <span style="">|</span>
+                <a href="#" style="color:black;" data-toggle="modal" data-target="#howToUseModal"><b>How to Use</b></a>
+            </li>
+        </ul>
+        <ul class="navbar-nav float-right">
+            <li>
+                <span><i>Want to create your own audio-first community? </i><a href="mailto:info@roundtable.audio">Let us know!</a></span>
+            </li>
+        </ul>
+    </nav>
+<!--    <p style="position:relative; background-color: #f6f6f0; font-size: 14px; height: 100%; width:100%; padding: 15px; padding-top: 0px; padding-bottom: 15px;margin-bottom: 0px;">Nothing catching your eye? Try joining the <a href="#">community lobby</a> instead.</p>-->
+    <div id="stories" style="position:relative; background-color: #f6f6f0; height: 100%; width:100%; padding: 15px;"></div>
+
+
+
+    <div class="modal fade" id="aboutModal" tabindex="-1" aria-labelledby="aboutModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="aboutModalLabel">About</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <a href="https://roundtable.audio" target="_blank">Roundtable.audio</a> is a browser-based tool for creating live, ad-hoc audio chat rooms. <i>Hacker News Roundtable</i> is an extension of roundtable.audio, and can be used to discuss stories from the <a href="https://news.ycombinator.com" target="_blank">Hacker News</a> site live with others.
+                <br><br>
+                It's also a demonstration of how roundtable.audio can be used to create audio-first communities.
+                If you're building/curating a community, forum, media-aggregator, or anything similar, it's likely that it could benefit from integrating audio-based discussions, or making it audio-first. After all, "social audio" is becoming an <a href="https://a16z.com/2020/12/07/social-strikes-back-audio/" target="_blank">increasingly powerful way to engage users and audiences</a>.<br><br>
+
+                If you're interested in integrating live audio into your product or service, <a href="mailto:info@roundtable.audio">let us know</a>.
+            </div>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="modal fade" id="howToUseModal" tabindex="-1" aria-labelledby="howToUseModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="howToUseModalLabel">How to Use</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <b>If you're posting </b>on the HN site and want to start a roundtable on your story, you can come here and grab the link that shows up for your story on the "new" tab, and then post the link to it in the comments on HN.
+                <br><br>
+                <b>If you're browsing</b> the HN site and find an interesting story on the top, new, or ask tabs, you can either start a roundtable and post the link to it in the story comments on HN, or see if someone else has already started a roundtable for it. It's not strictly necessary to post the link on the actual HN site, but it could help add visibility and encourage more people to join the roundtable.
+                <br><br>
+                It probably goes without saying that in no way are we affiliated with, or trying to "steal the thunder" from Hacker News. If you were going to post a comment to a story on HN, do not skip doing so because you've already spoken your ideas in a roundtable. This tool is meant to strictly add to, not take away from the vibrant HN community.
+            </div>
+        </div>
+      </div>
+    </div>
+
+  </body>
+</html>

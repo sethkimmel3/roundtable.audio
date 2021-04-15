@@ -1,0 +1,11 @@
+[engine]
+interface = "eth0"
+max-peer-count = 1024
+log-level = 10
+
+[turn]
+host = "turn:128.199.3.231:3478"
+secret = "airplane3!"
+
+[rpc]
+port = 7000
