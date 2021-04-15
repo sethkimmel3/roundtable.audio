@@ -74,7 +74,7 @@
             var isIncompatibleBrowser = $.fn.isIncompatibleBrowser();
 
             if(isIncompatibleBrowser){
-                $('#deviceBrowserAlertContainer').html('<div id="deviceBrowserAlert" class="alert alert-warning alert-dismissible fade show" role="alert" style="margin: 0px;"> <strong>Hold up!</strong> It looks like you may be using an incompatible device and browser. Roundtable.audio will not work on iOS Chrome or iOS Firefox at the moment. For best results, we recommend using desktop Chrome. <button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">&times;</span></button></div>');
+                $('#deviceBrowserAlertContainer').html('<div id="deviceBrowserAlert" class="alert alert-warning alert-dismissible fade show" role="alert" style="margin: 0px;"> <strong>Hold up!</strong> It looks like you may be using an incompatible device and browser. roundtable.audio will not work on iOS Chrome or iOS Firefox at the moment. For best results, we recommend using desktop Chrome. <button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">&times;</span></button></div>');
             }
 
             new ClipboardJS('#join-link-button');
@@ -457,7 +457,7 @@
 
     <div id="alerts" style="position:absolute;width:100%;">
     <div id="deviceBrowserAlertContainer"></div>
-    <div id="featureAlert"> <div id="featureAlert" class="alert alert-primary alert-dismissible fade show" role="alert" style="margin: 0px;"> <strong>New! </strong>Mention <a href="https://twitter.com/DiscourseFm" target="_blank">@DiscourseFm</a> anywhere on Twitter and include the words "start a discourse". We'll automatically reply with a link to a freshly-created discourse. <button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">&times;</span></button></div></div>
+    <!-- <div id="featureAlert"> <div id="featureAlert" class="alert alert-primary alert-dismissible fade show" role="alert" style="margin: 0px;"> <strong>New! </strong>Mention <a href="https://twitter.com/RoundtableBot" target="_blank">@RoundtableBot</a> anywhere on Twitter and include the words "start a roundtable". We'll automatically reply with a link to a freshly-created roundtable. <button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">&times;</span></button></div></div> -->
     </div>
 
     <nav class="navbar fixed-bottom navbar-light" style="background-color: #6c757d; float:none; display: inline-block; text-align: center;">
@@ -467,21 +467,24 @@
         <span style="color:white">&#183;</span>
         <a href="#" style="color:white" data-toggle="modal" data-target="#philosophyModal">Philosophy</a>
         <span style="color:white">&#183;</span>
-        <a href="#" style="color:white" data-toggle="modal" data-target="#contactModal">Contact</a>
+        <!-- <a href="#" style="color:white" data-toggle="modal" data-target="#contactModal">Contact</a>
         <span style="color:white">&#183;</span>
         <a href="#" style="color:white" data-toggle="modal" data-target="#upcomingModal">Upcoming</a>
+        <br> -->
+        <span style="color:white"><a href="https://github.com/sethkimmel3/roundtable.audio/" target="_blank" style="text-decoration:none;color:white">View us on <img src="icons/brands/GitHub-Mark-Light-32px.png" style="height:18px;width:auto;position:relative;top:-2px;"/></a></span>
+        <span style="color:white">&#183;</span>
+        <span style="color:white"><a href="https://twitter.com/RoundtableBot" target="_blank" style="text-decoration:none;color:white">Follow us on <img src="icons/brands/2021 Twitter logo - blue.png" style="height:18px;width:auto;position:relative;top:-2px;"/></a></span>
         <br>
-        <span style="color:white">Made with <img src="icons/heart-fill-red.svg" /> in post-apocalyptic Covid-19 land</span>
+        <span style="color:white">Made with <img src="icons/heart-fill-red.svg" /> on a quest to Camelot </span>
         <span style="color:white">&#183;</span>
         <span style="color:white">&copy; 2021</span>
     </nav>
 
     <div class="container min-vh-100">
       <div class="row min-vh-100 justify-content-center align-items-center">
-        <div class="column col-md-12"> <!-- class="text-center" -->
-            <h1 class="display-3">roundtable.audio
-	    <!--<img src="icons/radio-rainbow-with-circle.svg" style="height:50px;position: relative;top:2px;vertical-align: baseline;" />
-	    </h1>-->
+        <div class="column col-md-12" style="position:relative;top:-40px;"> <!-- class="text-center" -->
+            <img src="icons/logos/Transparent-2.png" style="height:250px;position:relative;top:30px;vertical-align: baseline;" />
+            <h1 class="display-3">roundtable.audio</h1>
             <!-- <h3>Live, broadcasted audio chat rooms to <span id="textchanger">learn something new.</span></h3> -->
             <h3>Live, unmoderated audio chat rooms to discuss anything on the internet.</h3>
             <h5>
@@ -490,7 +493,7 @@
                 <span id="browse_sources" style="color:#ffc107;cursor: pointer;" data-toggle="modal" data-target="#browseSourcesModal"> learn about sources.</span>
             </h5>
             <br>
-            <p id="noPublicRoundtables" style="display:none">There are no public roundtables to display right now - start a new roundtable to get the conversation going!</p>
+            <p id="noPublicRoundtables" style="display:none">There are no public roundtables to display right now - start a new one to get the conversation going!</p>
             <div class="card-columns" id="roundtableCards">
 
             </div>
@@ -639,19 +642,21 @@
       <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="aboutRoundtableModalLabel">About Roundtable.audio</h5>
+                <h5 class="modal-title" id="aboutRoundtableModalLabel">About roundtable.audio</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                   <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                <p>Since ancient times, humans have relied on spoken language to collaborate, organize, and connect with one another. But in recent times, much of our meaningful dialogue has been locked away in written text on the internet - taking the form of email, social media posts, comment sections, and instant messages. And even when we do speak online, it's often controlled or moderated by one individual or organization. In many ways, we've lost our ability to simply speak with one another at all, causing unprecented political divide and a decline in social relationships.
+                <p>Since ancient times, humans have relied on spoken language to collaborate, organize, and connect with one another. But more recently much of our meaningful dialogue has been locked away in written text - taking the form of email, social media posts, comment sections, and instant messages. And even when we do speak using these new mediums, it's often controlled or moderated by one individual or organization.
                 <br><br>
-                Roundtable.audio is meant to be the simplest decentralized conversation tool on the internet. We don't expect to fix the entirety of the above problem, but we want to provide a tool that can at least get the conversation going.
+                roundtable.audio is meant to be a simple conversation tool for the modern internet. We want to provide the ability for people to discuss whatever interesting topic they want in a more fun and meaningful way than text provides.
                 <br><br>
-                To get started, simply create or join a roundtable and let your voice be heard. Or to understand more of what you can do with Roundtable.audio, head over to the <a onclick="$.fn.closeModalOpenModal('#aboutModal', '#FAQModal');" href="#">FAQ</a> section.
+                To get started, simply create or join a Roundtable, share it with others, and let your voice be heard. Or to understand more of what you can do with roundtable.audio, head over to the <a onclick="$.fn.closeModalOpenModal('#aboutModal', '#FAQModal');" href="#">FAQ</a> section.
                 <br><br>
-                Roundtable.audio is a blend of Node, Golang, and native Javascript. It was built on top of <a href="https://github.com/pion/">Pion</a> and <a href="https://github.com/MixinNetwork/kraken/">Kraken</a> - special thanks to these open-source projects/communities.
+                roundtable.audio is a blend of Node, Golang, and native Javascript. It was built on top of <a href="https://github.com/pion/">Pion</a> and <a href="https://github.com/MixinNetwork/kraken/">Kraken</a> - special thanks to these open-source projects/communities. <a href="https://github.com/sethkimmel3/roundtable.audio/" target="_blank">This project is open-source</a> and all community contributions are welcomed!
+                <br><br>
+                If you have any questions, feedback, or inquiries, feel free to email us at <a href="mailto:info@roundtable.audio">info@roundtable.audio</a>.
                 </p>
             </div>
         </div>
@@ -668,7 +673,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                <h3>What is Roundtable.audio?</h3>
+                <h3>What is roundtable.audio?</h3>
                 <p>A platform for live, decentralized, broadcasted audio conferencing.</p>
                 <h3>What can I do with it?</h3>
                 <p>Quite a bit. Like a podcast, you can use it as a stage for dialogue. Like a radio station, you can use it to project a message to a wide audience. Roundtables can also be private, meaning they can be used for closed hangouts, meetings, and much more.</p>
@@ -703,13 +708,13 @@
       <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="philosophyModalLabel">Roundtable.audio Philosophy</h5>
+                <h5 class="modal-title" id="philosophyModalLabel">roundtable.audio Philosophy</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                   <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                Roundtable.audio is meant to be a welcoming environment. People should be able to speak freely and share their opinions, learn new things, and enjoy the company of others. Roundtable are not recorded or stored, which removes some of the pressure often associated with written text in online forums. Additionally, the decentralized nature of a roundtable - having no moderator - should allow for more free-form discussion without fear of being shut-down. We think these two elements will empower healthy roundtable and fun conversations. However, with this power, autonomy, and anonymity, we require community buy-in and respect to make it work.
+                roundtable.audio is meant to be a welcoming environment. People should be able to speak freely and share their opinions, learn new things, and enjoy the company of others. Roundtable are not recorded or stored, which removes some of the pressure often associated with written text in online forums. Additionally, the decentralized nature of a roundtable - having no moderator - should allow for more free-form discussion without fear of being shut-down. We think these two elements will empower healthy roundtable and fun conversations. However, with this power, autonomy, and anonymity, we require community buy-in and respect to make it work.
                 <br><br>
                 We therefore ask you to do your part and follow some guidelines:
                 <ul>
@@ -719,7 +724,7 @@
                 </ul>
                 If you do your part, we'll do ours. We want to continue to improve the experience of the community and introduce features that empower and encourage meaningful, respectful dialogue. If you have any ideas for improving community standards, we're all ears at <a href="mailto:info@roundtable.audio">info@roundtable.audio</a>.
                 <br><br>
-                <b>Disclaimer:</b> Roundtable.audio does not take any legal responsibility for what is said while using the service, or any outcomes directly or indirectly relating to the conversations while using the service.
+                <b>Disclaimer:</b> roundtable.audio does not take any legal responsibility for what is said while using the service, or any outcomes directly or indirectly relating to the conversations while using the service.
             </div>
         </div>
       </div>
@@ -735,7 +740,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                For now, you can get in touch with any questions, comments, suggestions, or inquiries at <a href="mailto:info@roundtable.audio">info@roundtable.audio.</a>
+                For now, you can get in touch with any questions, comments, suggestions, or inquiries at <a href="mailto:info@roundtable.audio">info@roundtable.audio</a>.
             </div>
         </div>
       </div>
@@ -751,7 +756,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                If you'd like to stay updated on our progress <a href="https://twitter.com/DiscourseFm" target="_blank">follow us on Twitter</a>.
+                If you'd like to stay updated on our progress <a href="https://twitter.com/RoundtableBot" target="_blank">follow us on Twitter</a>.
             </div>
         </div>
       </div>
