@@ -18,6 +18,8 @@ COPY --from=0 /build /usr/local/bin/build
 
 COPY config/engine.toml /config/engine.toml
 
+COPY config/engine.toml /root/.kraken/engine.toml
+
 EXPOSE 7000
 
 ENTRYPOINT ["/usr/local/bin/build"]
